@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { DataSaverProvider } from './i18n/DataSaverContext';
 import { LanguageProvider } from './i18n/LanguageContext';
-import { RoleProvider } from './i18n/RoleContext';
+import { SessionProvider } from './i18n/SessionContext';
 import './styles.css';
 
 createRoot(document.getElementById('root') as HTMLElement).render(
@@ -12,9 +12,9 @@ createRoot(document.getElementById('root') as HTMLElement).render(
     <BrowserRouter>
       <LanguageProvider>
         <DataSaverProvider>
-          <RoleProvider>
+          <SessionProvider>
             <App />
-          </RoleProvider>
+          </SessionProvider>
         </DataSaverProvider>
       </LanguageProvider>
     </BrowserRouter>

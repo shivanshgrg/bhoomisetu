@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { repository } from '../data';
-import { getAlerts, type Alert, type ParcelOwner } from '../domain';
+import { getAlerts, scopeParcelsToSession, type Alert, type ParcelOwner } from '../domain';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useSession } from '../i18n/SessionContext';
 import { uiText } from '../i18n/translations';
 import { SmsPreviewPanel } from './SmsPreviewPanel';
 
 export function NotificationCenter() {
   const { t } = useLanguage();
+  const { session } = useSession();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [ownersByParcelId, setOwnersByParcelId] = useState<Map<string, ParcelOwner>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
@@ -16,18 +18,22 @@ export function NotificationCenter() {
 
   async function loadAlerts() {
     setIsLoading(true);
-    const parcels = await repository.listParcels();
-    setAlerts(getAlerts(parcels));
-    setOwnersByParcelId(new Map(parcels.map((parcel) => [parcel.id, parcel.owner])));
+    const [parcels, projects] = await Promise.all([repository.listParcels(), repository.listProjects()]);
+    const scopedParcels = scopeParcelsToSession(parcels, projects, session);
+    setAlerts(getAlerts(scopedParcels));
+    setOwnersByParcelId(new Map(scopedParcels.map((parcel) => [parcel.id, parcel.owner])));
     setIsLoading(false);
   }
 
   useEffect(() => {
+    if (!session || session.role === 'landowner') {
+      return;
+    }
     loadAlerts();
-  }, []);
+  }, [session]);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || !session || session.role === 'landowner') {
       return;
     }
 
@@ -41,7 +47,11 @@ export function NotificationCenter() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+  }, [isOpen, session]);
+
+  if (!session || session.role === 'landowner') {
+    return null;
+  }
 
   return (
     <div className="notification-center" ref={panelRef}>

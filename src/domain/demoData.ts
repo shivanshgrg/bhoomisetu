@@ -715,6 +715,11 @@ function getSeededDocuments(seed: ParcelSeed, parcelId: string): ParcelDocument[
       uploadedByRole: roleByStage[stage.id],
       fileType: index % 4 === 0 ? 'image' : 'pdf',
       url: `/demo-documents/${parcelId}/${documentKind}.${index % 4 === 0 ? 'jpg' : 'pdf'}`,
+      // Seeded documents start verified so existing dashboard counts and the
+      // hero parcel's stuck state (blocked via its withheld valuation
+      // report, not via verification status) stay unchanged by this step —
+      // Step 28 wires unverified status into the advance gate.
+      status: 'verified' as const,
     }));
 }
 

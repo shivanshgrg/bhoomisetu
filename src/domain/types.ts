@@ -1,14 +1,17 @@
 import type {
   DocumentKind,
+  DocumentStatus,
   ObjectionReason,
   ObjectionStatus,
   OfficialRole,
   ProjectSector,
   ProjectStatus,
+  RiskLevel,
   StageId,
   StateName,
   UserRole,
 } from './constants';
+import type { DocumentCheckVerdict } from './documentCheck';
 
 export type ISODateString = `${number}-${number}-${number}`;
 
@@ -43,6 +46,11 @@ export type ParcelDocument = {
   uploadedByRole: OfficialRole;
   fileType: 'pdf' | 'image';
   url: string;
+  status: DocumentStatus;
+  rejectionReason?: string;
+  reviewedByRole?: OfficialRole;
+  reviewedOn?: ISODateString;
+  qualityCheckVerdict?: DocumentCheckVerdict;
 };
 
 export type ParcelObjection = {
@@ -178,6 +186,26 @@ export type NationalSummary = {
   delayedCount: number;
   completeCount: number;
   projectStatuses: ProjectCalculatedStatus[];
+};
+
+export type RiskContributor = {
+  label: string;
+  points: number;
+};
+
+export type ParcelRiskAssessment = {
+  parcelId: string;
+  score: number;
+  level: RiskLevel;
+  contributors: RiskContributor[];
+  recommendedAction: string;
+  responsibleRole: OfficialRole;
+};
+
+export type ActionCenterEntry = {
+  parcel: AcquisitionParcel;
+  project: AcquisitionProject;
+  riskAssessment: ParcelRiskAssessment;
 };
 
 export type AuthenticatedUser = {

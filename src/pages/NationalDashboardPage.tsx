@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Badge, Button, Card, DataTable, EmptyState, PageContainer, PageHeader } from '../components/ui';
+import { Badge, Card, DataTable, EmptyState, PageContainer, PageHeader } from '../components/ui';
 import { repository } from '../data';
-import { useRole } from '../i18n/RoleContext';
+import { useLanguage } from '../i18n/LanguageContext';
+import { useSession } from '../i18n/SessionContext';
+import { appRoleLabels, projectStatusLabels, uiText } from '../i18n/translations';
 import {
   PROJECT_SECTOR_LABELS,
-  STAKEHOLDER_ROLE_LABELS,
   STATE_NAME_LABELS,
   getNationalSummary,
+  scopeParcelsToSession,
+  scopeProjectsToSession,
   type AcquisitionParcel,
   type AcquisitionProject,
 } from '../domain';
-import { getProjectStatusIcon, getProjectStatusLabel, getProjectStatusTone } from './statusDisplay';
+import { getProjectStatusIcon, getProjectStatusTone } from './statusDisplay';
 
 function formatCurrency(amount: number) {
   return `₹${Math.round(amount).toLocaleString('en-IN')}`;
@@ -22,7 +24,9 @@ function formatHectares(amount: number) {
 }
 
 export function NationalDashboardPage() {
-  const { role } = useRole();
+  const { session } = useSession();
+  const { t } = useLanguage();
+  const role = session?.role;
   const [projects, setProjects] = useState<AcquisitionProject[]>([]);
   const [parcels, setParcels] = useState<AcquisitionParcel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +44,7 @@ export function NationalDashboardPage() {
       })
       .catch(() => {
         if (!isCancelled) {
-          setLoadError('National dashboard data could not be loaded. Try reloading the page.');
+          setLoadError(t(uiText.nationalDashboard.loadError));
         }
       })
       .finally(() => {
@@ -52,13 +56,23 @@ export function NationalDashboardPage() {
     return () => {
       isCancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const nationalSummary = useMemo(() => getNationalSummary(projects, parcels), [projects, parcels]);
+  const scopedProjects = useMemo(() => scopeProjectsToSession(projects, session), [projects, session]);
+  const scopedParcels = useMemo(
+    () => scopeParcelsToSession(parcels, projects, session),
+    [parcels, projects, session],
+  );
+
+  const nationalSummary = useMemo(
+    () => getNationalSummary(scopedProjects, scopedParcels),
+    [scopedProjects, scopedParcels],
+  );
 
   const rAndRTotals = useMemo(
     () =>
-      projects.reduce(
+      scopedProjects.reduce(
         (totals, project) => ({
           affectedFamilies: totals.affectedFamilies + project.rAndR.affectedFamilies,
           displacedFamilies: totals.displacedFamilies + project.rAndR.displacedFamilies,
@@ -67,7 +81,7 @@ export function NationalDashboardPage() {
         }),
         { affectedFamilies: 0, displacedFamilies: 0, familiesResettled: 0, checklistCompleteCount: 0 },
       ),
-    [projects],
+    [scopedProjects],
   );
 
   const resettlementPercent =
@@ -75,7 +89,7 @@ export function NationalDashboardPage() {
       ? Math.round((rAndRTotals.familiesResettled / rAndRTotals.displacedFamilies) * 100)
       : 0;
 
-  const rAndRRows = projects.map((project) => {
+  const rAndRRows = scopedProjects.map((project) => {
     const displaced = project.rAndR.displacedFamilies;
     const resettledPercent = displaced > 0 ? Math.round((project.rAndR.familiesResettled / displaced) * 100) : 0;
 
@@ -86,12 +100,14 @@ export function NationalDashboardPage() {
       project.rAndR.displacedFamilies.toLocaleString('en-IN'),
       `${project.rAndR.familiesResettled.toLocaleString('en-IN')} (${resettledPercent}%)`,
       <Badge key={`${project.id}-rr-checklist`} tone={project.rAndR.rrChecklistComplete ? 'success' : 'warning'}>
-        {project.rAndR.rrChecklistComplete ? 'Complete' : 'Pending'}
+        {project.rAndR.rrChecklistComplete
+          ? t(uiText.nationalDashboard.checklistComplete)
+          : t(uiText.nationalDashboard.checklistPending)}
       </Badge>,
     ];
   });
 
-  const projectRows = projects.map((project) => {
+  const projectRows = scopedProjects.map((project) => {
     const status = nationalSummary.projectStatuses.find((entry) => entry.projectId === project.id);
     if (!status) {
       return [];
@@ -107,7 +123,7 @@ export function NationalDashboardPage() {
       `${status.compensationPaidPercent}%`,
       `${status.possessionPercent}%`,
       <Badge key={`${project.id}-status`} tone={getProjectStatusTone(status.status)}>
-        <span aria-hidden="true">{getProjectStatusIcon(status.status)}</span> {getProjectStatusLabel(status.status)}
+        <span aria-hidden="true">{getProjectStatusIcon(status.status)}</span> {t(projectStatusLabels[status.status])}
       </Badge>,
     ];
   });
@@ -115,97 +131,132 @@ export function NationalDashboardPage() {
   return (
     <PageContainer>
       <PageHeader
-        eyebrow="National overview"
-        title="National Dashboard"
-        description="Aggregate progress across every state and project — area, compensation, possession, and timeline adherence."
+        eyebrow={t(uiText.nationalDashboard.eyebrow)}
+        title={t(uiText.nationalDashboard.title)}
+        description={t(uiText.nationalDashboard.description)}
         actions={
-          <div className="page-actions-group">
-            {role && <Badge tone="info">Viewing as: {STAKEHOLDER_ROLE_LABELS[role]}</Badge>}
-            <Link to="/official">
-              <Button type="button" variant="secondary">
-                Back to district dashboard
-              </Button>
-            </Link>
-          </div>
+          role && (
+            <Badge tone="info">
+              {t(uiText.nationalDashboard.viewingAsPrefix)} {t(appRoleLabels[role])}
+            </Badge>
+          )
         }
       />
 
       {loadError && (
         <Card>
-          <EmptyState title="Unable to load national data" description={loadError} />
+          <EmptyState title={t(uiText.nationalDashboard.loadErrorTitle)} description={loadError} />
         </Card>
       )}
 
       {!loadError && (
         <>
           <section className="summary-grid" aria-label="National summary">
-            <Card eyebrow="Coverage" title="Projects & States">
+            <Card eyebrow={t(uiText.nationalDashboard.coverageEyebrow)} title={t(uiText.nationalDashboard.projectsStatesTitle)}>
               <p className="metric">{nationalSummary.totalProjects}</p>
-              <p>Across {nationalSummary.totalStates} states.</p>
-            </Card>
-            <Card eyebrow="Land" title="Area Acquired / Notified">
-              <p className="metric">{formatHectares(nationalSummary.areaAcquiredHectares)}</p>
-              <p>of {formatHectares(nationalSummary.areaNotifiedHectares)} notified nationally.</p>
-            </Card>
-            <Card eyebrow="Compensation" title="Paid / Assessed">
-              <p className="metric">{formatCurrency(nationalSummary.compensationPaid)}</p>
-              <p>of {formatCurrency(nationalSummary.compensationAssessed)} assessed nationally.</p>
-            </Card>
-            <Card eyebrow="Timeline adherence" title="Project Status">
-              <p className="metric">{nationalSummary.onTrackCount} on track</p>
               <p>
-                {nationalSummary.atRiskCount} at risk, {nationalSummary.delayedCount} delayed,{' '}
-                {nationalSummary.completeCount} complete.
+                {t(uiText.nationalDashboard.acrossWord)} {nationalSummary.totalStates}{' '}
+                {t(uiText.nationalDashboard.statesSuffix)}
               </p>
             </Card>
-            <Card eyebrow="Social impact" title="R&R & Affected Families">
+            <Card eyebrow={t(uiText.nationalDashboard.landEyebrow)} title={t(uiText.nationalDashboard.areaAcquiredNotifiedTitle)}>
+              <p className="metric">{formatHectares(nationalSummary.areaAcquiredHectares)}</p>
+              <p>
+                {t(uiText.nationalDashboard.ofWord)} {formatHectares(nationalSummary.areaNotifiedHectares)}{' '}
+                {t(uiText.nationalDashboard.notifiedNationallySuffix)}
+              </p>
+            </Card>
+            <Card eyebrow={t(uiText.nationalDashboard.compensationEyebrow)} title={t(uiText.nationalDashboard.paidAssessedTitle)}>
+              <p className="metric">{formatCurrency(nationalSummary.compensationPaid)}</p>
+              <p>
+                {t(uiText.nationalDashboard.ofWord)} {formatCurrency(nationalSummary.compensationAssessed)}{' '}
+                {t(uiText.nationalDashboard.assessedNationallySuffix)}
+              </p>
+            </Card>
+            <Card
+              eyebrow={t(uiText.nationalDashboard.timelineAdherenceEyebrow)}
+              title={t(uiText.nationalDashboard.projectStatusTitle)}
+            >
+              <p className="metric">
+                {nationalSummary.onTrackCount} {t(uiText.nationalDashboard.onTrackSuffix)}
+              </p>
+              <p>
+                {nationalSummary.atRiskCount} {t(uiText.nationalDashboard.atRiskSuffix)} {nationalSummary.delayedCount}{' '}
+                {t(uiText.nationalDashboard.delayedSuffix)} {nationalSummary.completeCount}{' '}
+                {t(uiText.nationalDashboard.completeSuffix)}
+              </p>
+            </Card>
+            <Card
+              eyebrow={t(uiText.nationalDashboard.socialImpactEyebrow)}
+              title={t(uiText.nationalDashboard.rAndRAffectedFamiliesTitle)}
+            >
               <p className="metric">
                 {rAndRTotals.familiesResettled.toLocaleString('en-IN')} / {rAndRTotals.displacedFamilies.toLocaleString('en-IN')}
               </p>
               <p>
-                families resettled of {rAndRTotals.displacedFamilies.toLocaleString('en-IN')} displaced (
-                {resettlementPercent}%), out of {rAndRTotals.affectedFamilies.toLocaleString('en-IN')} affected
-                nationally. {rAndRTotals.checklistCompleteCount} of {projects.length} projects have a complete R&R
-                checklist.
+                {t(uiText.nationalDashboard.familiesResettledOfWord)} {rAndRTotals.displacedFamilies.toLocaleString('en-IN')}{' '}
+                {t(uiText.nationalDashboard.displacedWord)} ({resettlementPercent}%), {t(uiText.nationalDashboard.outOfWord)}{' '}
+                {rAndRTotals.affectedFamilies.toLocaleString('en-IN')} {t(uiText.nationalDashboard.affectedNationallySuffix)}{' '}
+                {rAndRTotals.checklistCompleteCount} {t(uiText.nationalDashboard.checklistCompleteMiddleWord)}{' '}
+                {scopedProjects.length} {t(uiText.nationalDashboard.projectsChecklistSuffix)}
               </p>
             </Card>
           </section>
 
-          <Card eyebrow={`${projects.length} projects`} title="Rehabilitation & Resettlement by Project">
+          <Card
+            eyebrow={`${scopedProjects.length} ${t(uiText.nationalDashboard.projectsSuffix)}`}
+            title={t(uiText.nationalDashboard.rAndRByProjectTitle)}
+          >
             {isLoading ? (
-              <p>Loading national dashboard…</p>
+              <p>{t(uiText.nationalDashboard.loadingNationalDashboard)}</p>
             ) : rAndRRows.length > 0 ? (
               <DataTable
-                caption="Affected, displaced, and resettled families per project"
-                columns={['Project', 'State', 'Affected families', 'Displaced families', 'Resettled (%)', 'R&R checklist']}
+                caption={t(uiText.nationalDashboard.rAndRCaption)}
+                columns={[
+                  t(uiText.nationalDashboard.colProject),
+                  t(uiText.nationalDashboard.colState),
+                  t(uiText.nationalDashboard.colAffectedFamilies),
+                  t(uiText.nationalDashboard.colDisplacedFamilies),
+                  t(uiText.nationalDashboard.colResettledPercent),
+                  t(uiText.nationalDashboard.colRAndRChecklist),
+                ]}
                 rows={rAndRRows}
               />
             ) : (
-              <EmptyState title="No projects found" description="No acquisition projects are configured yet." />
+              <EmptyState
+                title={t(uiText.nationalDashboard.noProjectsFoundTitle)}
+                description={t(uiText.nationalDashboard.noProjectsFoundDescription)}
+              />
             )}
           </Card>
 
-          <Card eyebrow={`${projects.length} projects`} title="Project-wise Progress">
+          <Card
+            eyebrow={`${scopedProjects.length} ${t(uiText.nationalDashboard.projectsSuffix)}`}
+            title={t(uiText.nationalDashboard.projectWiseProgressTitle)}
+          >
             {isLoading ? (
-              <p>Loading national dashboard…</p>
+              <p>{t(uiText.nationalDashboard.loadingNationalDashboard)}</p>
             ) : projectRows.length > 0 ? (
               <DataTable
-                caption="Every acquisition project, state, and computed progress"
+                caption={t(uiText.nationalDashboard.projectProgressCaption)}
                 columns={[
-                  'Project',
-                  'State',
-                  'Sector',
-                  'Area acquired / notified',
-                  'Area %',
-                  'Compensation paid / assessed',
-                  'Compensation %',
-                  'Possession %',
-                  'Timeline status',
+                  t(uiText.nationalDashboard.colProject),
+                  t(uiText.nationalDashboard.colState),
+                  t(uiText.nationalDashboard.colSector),
+                  t(uiText.nationalDashboard.colAreaAcquiredNotified),
+                  t(uiText.nationalDashboard.colAreaPercent),
+                  t(uiText.nationalDashboard.colCompensationPaidAssessed),
+                  t(uiText.nationalDashboard.colCompensationPercent),
+                  t(uiText.nationalDashboard.colPossessionPercent),
+                  t(uiText.nationalDashboard.colTimelineStatus),
                 ]}
                 rows={projectRows}
               />
             ) : (
-              <EmptyState title="No projects found" description="No acquisition projects are configured yet." />
+              <EmptyState
+                title={t(uiText.nationalDashboard.noProjectsFoundTitle)}
+                description={t(uiText.nationalDashboard.noProjectsFoundDescription)}
+              />
             )}
           </Card>
         </>

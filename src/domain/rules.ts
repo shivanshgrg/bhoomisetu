@@ -62,11 +62,13 @@ export function getMissingRequiredDocuments(
   parcel: AcquisitionParcel,
   stageId: StageId = parcel.currentStage,
 ): DocumentKind[] {
-  const availableKinds = new Set(
-    getDocumentsForStage(parcel, stageId).map((document) => document.kind),
+  const verifiedKinds = new Set(
+    getDocumentsForStage(parcel, stageId)
+      .filter((document) => document.status === 'verified')
+      .map((document) => document.kind),
   );
 
-  return getRequiredDocumentKinds(stageId).filter((documentKind) => !availableKinds.has(documentKind));
+  return getRequiredDocumentKinds(stageId).filter((documentKind) => !verifiedKinds.has(documentKind));
 }
 
 export function getOpenObjections(parcel: AcquisitionParcel): ParcelObjection[] {

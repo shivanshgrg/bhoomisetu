@@ -4,9 +4,9 @@ import { SpeakButton } from '../components/SpeakButton';
 import { VoiceInputButton } from '../components/VoiceInputButton';
 import { Badge, Button, Card, PageContainer, PageHeader, TextField } from '../components/ui';
 import { repository } from '../data';
-import { STAKEHOLDER_ROLE_LABELS } from '../domain';
+import { APP_ROLE_LABELS } from '../domain';
 import { useLanguage } from '../i18n/LanguageContext';
-import { useRole } from '../i18n/RoleContext';
+import { useSession } from '../i18n/SessionContext';
 import { uiText } from '../i18n/translations';
 
 // Best-effort cleanup of a spoken survey number: spoken digits/words come through
@@ -24,7 +24,8 @@ function parseSpokenSurveyNumber(transcript: string): string {
 export function LandownerPage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { role } = useRole();
+  const { session } = useSession();
+  const role = session?.role;
   const [surveyNumber, setSurveyNumber] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | undefined>(undefined);
@@ -71,7 +72,7 @@ export function LandownerPage() {
         description={description}
         actions={
           <div className="page-actions-group">
-            {role && <Badge tone="info">Viewing as: {STAKEHOLDER_ROLE_LABELS[role]}</Badge>}
+            {role && <Badge tone="info">Viewing as: {APP_ROLE_LABELS[role]}</Badge>}
             <SpeakButton text={`${t(uiText.landownerSearch.title)}. ${description}`} />
           </div>
         }

@@ -45,6 +45,12 @@ do $$ begin
   create type objection_status as enum ('pending', 'under_review', 'resolved');
 exception when duplicate_object then null; end $$;
 
+-- Step 27: document verification status, kept in sync with
+-- src/domain/constants.ts DOCUMENT_STATUSES.
+do $$ begin
+  create type document_status as enum ('pending_verification', 'verified', 'rejected');
+exception when duplicate_object then null; end $$;
+
 do $$ begin
   create type objection_reason as enum (
     'ownership',
@@ -155,7 +161,16 @@ create table if not exists documents (
   uploaded_on date not null,
   uploaded_by_role official_role not null,
   file_type text not null check (file_type in ('pdf', 'image')),
-  url text not null
+  url text not null,
+  -- Step 27: document verification. status has a default so this stays a
+  -- purely additive change for a schema not yet applied to any live
+  -- project; the other four columns are nullable (no review has happened
+  -- yet for a freshly uploaded document).
+  status document_status not null default 'pending_verification',
+  rejection_reason text,
+  reviewed_by_role official_role,
+  reviewed_on date,
+  quality_check_verdict text check (quality_check_verdict in ('looks_complete', 'needs_review', 'flagged'))
 );
 
 create index if not exists documents_parcel_idx on documents (parcel_id);
@@ -212,6 +227,8 @@ drop policy if exists "public read documents" on documents;
 create policy "public read documents" on documents for select using (true);
 drop policy if exists "public insert documents" on documents;
 create policy "public insert documents" on documents for insert with check (true);
+drop policy if exists "public update documents" on documents;
+create policy "public update documents" on documents for update using (true);
 
 drop policy if exists "public read objections" on objections;
 create policy "public read objections" on objections for select using (true);

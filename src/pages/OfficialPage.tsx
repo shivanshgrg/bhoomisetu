@@ -3,7 +3,6 @@ import { Link, Navigate } from 'react-router-dom';
 import { ParcelMap } from '../components/ParcelMap';
 import {
   Badge,
-  Button,
   Card,
   DataTable,
   EmptyState,
@@ -14,25 +13,29 @@ import {
 } from '../components/ui';
 import { repository } from '../data';
 import { useDataSaver } from '../i18n/DataSaverContext';
-import { useRole } from '../i18n/RoleContext';
+import { useLanguage } from '../i18n/LanguageContext';
+import { useSession } from '../i18n/SessionContext';
+import { appRoleLabels, dashboardStatusLabels, stageLabels, stageShortLabels, uiText } from '../i18n/translations';
 import {
   ACQUISITION_STAGES,
-  STAGE_BY_ID,
-  STAKEHOLDER_ROLE_LABELS,
   getAdvanceGate,
   getAttentionParcels,
   getDashboardSummary,
   getParcelCalculatedStatus,
+  scopeParcelsToSession,
+  scopeProjectsToSession,
   type AcquisitionParcel,
   type AcquisitionProject,
   type DashboardStatus,
   type StageId,
 } from '../domain';
-import { getBadgeTone, getStatusIcon, getStatusLabel } from './statusDisplay';
+import { getAdvanceGateReasonText, getBadgeTone, getStatusIcon } from './statusDisplay';
 
 export function OfficialPage() {
   const { isDataSaverOn } = useDataSaver();
-  const { role } = useRole();
+  const { session } = useSession();
+  const { t } = useLanguage();
+  const role = session?.role;
   const [parcels, setParcels] = useState<AcquisitionParcel[]>([]);
   const [projects, setProjects] = useState<AcquisitionProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +43,8 @@ export function OfficialPage() {
 
   const [surveyQuery, setSurveyQuery] = useState('');
   const [districtFilter, setDistrictFilter] = useState('all');
+  const [villageFilter, setVillageFilter] = useState('all');
+  const [projectFilter, setProjectFilter] = useState('all');
   const [stageFilter, setStageFilter] = useState<'all' | StageId>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | DashboardStatus>('all');
 
@@ -55,7 +60,7 @@ export function OfficialPage() {
       })
       .catch(() => {
         if (!isCancelled) {
-          setLoadError('Parcel data could not be loaded. Try reloading the page.');
+          setLoadError(t(uiText.official.loadError));
         }
       })
       .finally(() => {
@@ -67,19 +72,36 @@ export function OfficialPage() {
     return () => {
       isCancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const scopedParcels = useMemo(
+    () => scopeParcelsToSession(parcels, projects, session),
+    [parcels, projects, session],
+  );
+  const scopedProjects = useMemo(() => scopeProjectsToSession(projects, session), [projects, session]);
+
   const districts = useMemo(
-    () => Array.from(new Set(parcels.map((parcel) => parcel.district))).sort(),
-    [parcels],
+    () => Array.from(new Set(scopedParcels.map((parcel) => parcel.district))).sort(),
+    [scopedParcels],
   );
 
-  const dashboardSummary = useMemo(() => getDashboardSummary(parcels), [parcels]);
+  const villages = useMemo(
+    () => Array.from(new Set(scopedParcels.map((parcel) => parcel.village))).sort(),
+    [scopedParcels],
+  );
+
+  const projectOptions = useMemo(
+    () => [...scopedProjects].sort((a, b) => a.name.localeCompare(b.name)),
+    [scopedProjects],
+  );
+
+  const dashboardSummary = useMemo(() => getDashboardSummary(scopedParcels), [scopedParcels]);
 
   const filteredParcels = useMemo(() => {
     const normalizedSurveyQuery = surveyQuery.trim().toLowerCase();
 
-    return parcels.filter((parcel) => {
+    return scopedParcels.filter((parcel) => {
       const calculatedStatus = getParcelCalculatedStatus(parcel);
 
       if (
@@ -93,6 +115,14 @@ export function OfficialPage() {
         return false;
       }
 
+      if (villageFilter !== 'all' && parcel.village !== villageFilter) {
+        return false;
+      }
+
+      if (projectFilter !== 'all' && parcel.projectId !== projectFilter) {
+        return false;
+      }
+
       if (stageFilter !== 'all' && parcel.currentStage !== stageFilter) {
         return false;
       }
@@ -103,23 +133,24 @@ export function OfficialPage() {
 
       return true;
     });
-  }, [parcels, surveyQuery, districtFilter, stageFilter, statusFilter]);
+  }, [scopedParcels, surveyQuery, districtFilter, villageFilter, projectFilter, stageFilter, statusFilter]);
 
   const attentionRows = getAttentionParcels(filteredParcels)
     .slice(0, 6)
     .map(({ parcel, calculatedStatus }) => {
       const gate = getAdvanceGate(parcel);
       const nextAction = gate.canAdvance
-        ? `${calculatedStatus.daysInStage} days in stage; review delay`
-        : gate.reasons[0];
+        ? `${calculatedStatus.daysInStage} ${t(uiText.official.daysInStageReviewDelaySuffix)}`
+        : getAdvanceGateReasonText(parcel.currentStage, calculatedStatus, gate, t);
 
       return [
         <Link key={`${parcel.id}-link`} to={`/official/parcel/${parcel.id}`}>
           {parcel.surveyNumber}
         </Link>,
-        STAGE_BY_ID[parcel.currentStage].label,
+        t(stageLabels[parcel.currentStage]),
         <Badge key={`${parcel.id}-status`} tone={getBadgeTone(calculatedStatus.status)}>
-          <span aria-hidden="true">{getStatusIcon(calculatedStatus.status)}</span> {getStatusLabel(calculatedStatus.status)}
+          <span aria-hidden="true">{getStatusIcon(calculatedStatus.status)}</span>{' '}
+          {t(dashboardStatusLabels[calculatedStatus.status])}
         </Badge>,
         nextAction,
       ];
@@ -134,10 +165,11 @@ export function OfficialPage() {
       </Link>,
       parcel.village,
       parcel.district,
-      STAGE_BY_ID[parcel.currentStage].label,
+      t(stageLabels[parcel.currentStage]),
       `${calculatedStatus.daysInStage}d`,
       <Badge key={`${parcel.id}-status`} tone={getBadgeTone(calculatedStatus.status)}>
-        <span aria-hidden="true">{getStatusIcon(calculatedStatus.status)}</span> {getStatusLabel(calculatedStatus.status)}
+        <span aria-hidden="true">{getStatusIcon(calculatedStatus.status)}</span>{' '}
+        {t(dashboardStatusLabels[calculatedStatus.status])}
       </Badge>,
       calculatedStatus.missingDocumentKinds.length,
       calculatedStatus.openObjectionCount,
@@ -145,78 +177,81 @@ export function OfficialPage() {
   });
 
   // Prototype-only view default (Step 17, not real access control): a
-  // Central/State viewer role lands directly on the national rollup instead
-  // of the district-level parcel view.
-  if (role === 'central_state_viewer') {
+  // national admin or state authority role lands directly on the national
+  // rollup instead of the district-level parcel view.
+  if (role === 'national_admin' || role === 'state_authority') {
     return <Navigate to="/official/national" replace />;
   }
 
   return (
     <PageContainer>
       <PageHeader
-        eyebrow="Official workspace"
-        title="Parcel Monitoring"
-        description="Live dashboard for stage counts, survey search, filters, attention queues, and parcel review."
+        eyebrow={t(uiText.official.eyebrow)}
+        title={t(uiText.official.title)}
+        description={t(uiText.official.description)}
         actions={
-          <div className="page-actions-group">
-            {role && <Badge tone="info">Viewing as: {STAKEHOLDER_ROLE_LABELS[role]}</Badge>}
-            <Link to="/official/national">
-              <Button type="button" variant="secondary">
-                National Dashboard
-              </Button>
-            </Link>
-          </div>
+          role && (
+            <Badge tone="info">
+              {t(uiText.official.viewingAsPrefix)} {t(appRoleLabels[role])}
+            </Badge>
+          )
         }
       />
 
       {loadError && (
         <Card>
-          <EmptyState title="Unable to load parcels" description={loadError} />
+          <EmptyState title={t(uiText.official.loadErrorTitle)} description={t(uiText.official.loadError)} />
         </Card>
       )}
 
       {!loadError && (
         <>
           <section className="summary-grid" aria-label="Dashboard summary">
-            <Card eyebrow="Current load" title="Parcels">
+            <Card eyebrow={t(uiText.official.currentLoadEyebrow)} title={t(uiText.official.parcelsTitle)}>
               <p className="metric">{dashboardSummary.total}</p>
-              <p>{dashboardSummary.complete} complete of the full acquisition workflow.</p>
+              <p>
+                {dashboardSummary.complete} {t(uiText.official.completeSuffix)}
+              </p>
             </Card>
-            <Card eyebrow="Attention" title="Stuck Parcels">
+            <Card eyebrow={t(uiText.official.attentionEyebrow)} title={t(uiText.official.stuckParcelsTitle)}>
               <p className="metric warning">{dashboardSummary.stuck}</p>
-              <p>{dashboardSummary.blocked} additional parcels blocked on documents or objections.</p>
+              <p>
+                {dashboardSummary.blocked} {t(uiText.official.blockedAdditionalSuffix)}
+              </p>
             </Card>
-            <Card eyebrow="Documents" title="Pending Uploads">
+            <Card eyebrow={t(uiText.official.documentsEyebrow)} title={t(uiText.official.pendingUploadsTitle)}>
               <p className="metric">{dashboardSummary.missingDocuments}</p>
-              <p>{dashboardSummary.openObjections} objections still open across all parcels.</p>
+              <p>
+                {dashboardSummary.openObjections} {t(uiText.official.openObjectionsAcrossSuffix)}
+              </p>
             </Card>
           </section>
 
-          <Card eyebrow="Workflow" title="Parcels by Stage">
+          <Card eyebrow={t(uiText.official.workflowEyebrow)} title={t(uiText.official.byStageTitle)}>
             <div className="stage-grid" aria-label="Parcel count by stage">
               {ACQUISITION_STAGES.map((stage) => (
                 <div className="stage-tile" key={stage.id}>
                   <strong>{dashboardSummary.byStage[stage.id]}</strong>
-                  <span>{stage.shortLabel}</span>
+                  <span>{t(stageShortLabels[stage.id])}</span>
                 </div>
               ))}
             </div>
           </Card>
 
-          <Card eyebrow="Controls" title="Survey Search and Filters">
+          <Card eyebrow={t(uiText.official.controlsEyebrow)} title={t(uiText.official.filtersTitle)}>
             <form className="filter-grid" onSubmit={(event) => event.preventDefault()}>
               <TextField
-                label="Survey number"
-                placeholder="124/7"
+                label={t(uiText.official.surveyNumberLabel)}
+                placeholder={t(uiText.official.surveyNumberPlaceholder)}
                 value={surveyQuery}
                 onChange={(event) => setSurveyQuery(event.target.value)}
               />
               <SelectField
-                label="District"
+                label={t(uiText.official.districtLabel)}
                 value={districtFilter}
                 onChange={(event) => setDistrictFilter(event.target.value)}
               >
-                <option value="all">All districts</option>
+                <option value="all">{t(uiText.official.allDistricts)}</option>
                 {districts.map((district) => (
                   <option key={district} value={district}>
                     {district}
@@ -224,85 +259,120 @@ export function OfficialPage() {
                 ))}
               </SelectField>
               <SelectField
-                label="Stage"
-                value={stageFilter}
-                onChange={(event) => setStageFilter(event.target.value as 'all' | StageId)}
+                label={t(uiText.official.villageLabel)}
+                value={villageFilter}
+                onChange={(event) => setVillageFilter(event.target.value)}
               >
-                <option value="all">All stages</option>
-                {ACQUISITION_STAGES.map((stage) => (
-                  <option key={stage.id} value={stage.id}>
-                    {stage.label}
+                <option value="all">{t(uiText.official.allVillages)}</option>
+                {villages.map((village) => (
+                  <option key={village} value={village}>
+                    {village}
                   </option>
                 ))}
               </SelectField>
               <SelectField
-                label="Status"
+                label={t(uiText.official.projectLabel)}
+                value={projectFilter}
+                onChange={(event) => setProjectFilter(event.target.value)}
+              >
+                <option value="all">{t(uiText.official.allProjects)}</option>
+                {projectOptions.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </SelectField>
+              <SelectField
+                label={t(uiText.official.stageLabel)}
+                value={stageFilter}
+                onChange={(event) => setStageFilter(event.target.value as 'all' | StageId)}
+              >
+                <option value="all">{t(uiText.official.allStages)}</option>
+                {ACQUISITION_STAGES.map((stage) => (
+                  <option key={stage.id} value={stage.id}>
+                    {t(stageLabels[stage.id])}
+                  </option>
+                ))}
+              </SelectField>
+              <SelectField
+                label={t(uiText.official.statusLabel)}
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value as 'all' | DashboardStatus)}
               >
-                <option value="all">All statuses</option>
-                <option value="stuck">Stuck only</option>
-                <option value="blocked">Blocked only</option>
-                <option value="ready_to_advance">Ready to advance</option>
-                <option value="on_track">On track</option>
-                <option value="complete">Complete</option>
+                <option value="all">{t(uiText.official.allStatuses)}</option>
+                <option value="stuck">{t(uiText.official.stuckOnly)}</option>
+                <option value="blocked">{t(uiText.official.blockedOnly)}</option>
+                <option value="ready_to_advance">{t(uiText.official.readyToAdvanceOption)}</option>
+                <option value="on_track">{t(uiText.official.onTrackOption)}</option>
+                <option value="complete">{t(uiText.official.completeOption)}</option>
               </SelectField>
             </form>
           </Card>
 
-          <Card eyebrow={`${filteredParcels.length} shown`} title="Parcel Map">
+          <Card
+            eyebrow={`${filteredParcels.length} ${t(uiText.official.shownSuffix)}`}
+            title={t(uiText.official.mapTitle)}
+          >
             {isDataSaverOn ? (
               <EmptyState
-                title="Map hidden to save data"
-                description="Turn off Data Saver in the navigation bar to load the map tiles."
+                title={t(uiText.official.mapHiddenTitle)}
+                description={t(uiText.official.mapHiddenDescription)}
               />
             ) : filteredParcels.length > 0 ? (
-              <ParcelMap parcels={filteredParcels} projects={projects} />
+              <ParcelMap parcels={filteredParcels} projects={scopedProjects} />
             ) : (
               <EmptyState
-                title="No parcels to show on the map"
-                description="Adjust the survey number, district, stage, or status filters."
+                title={t(uiText.official.noParcelsMapTitle)}
+                description={t(uiText.official.adjustFiltersDescription)}
               />
             )}
           </Card>
 
-          <Card eyebrow="Attention queue" title="Parcels Needing Review">
+          <Card eyebrow={t(uiText.official.attentionQueueEyebrow)} title={t(uiText.official.parcelsNeedingReviewTitle)}>
             {attentionRows.length > 0 ? (
               <DataTable
-                caption="Stuck or blocked parcels, most delayed first"
-                columns={['Survey', 'Stage', 'Status', 'Next action']}
+                caption={t(uiText.official.attentionCaption)}
+                columns={[
+                  t(uiText.official.colSurvey),
+                  t(uiText.official.colStage),
+                  t(uiText.official.colStatus),
+                  t(uiText.official.colNextAction),
+                ]}
                 rows={attentionRows}
               />
             ) : (
               <EmptyState
-                title="Nothing needs attention"
-                description="No stuck or blocked parcels match the current filters."
+                title={t(uiText.official.nothingNeedsAttentionTitle)}
+                description={t(uiText.official.nothingNeedsAttentionDescription)}
               />
             )}
           </Card>
 
-          <Card eyebrow={`${filteredParcels.length} of ${parcels.length}`} title="Parcel List">
+          <Card
+            eyebrow={`${filteredParcels.length} ${t(uiText.official.ofWord)} ${scopedParcels.length}`}
+            title={t(uiText.official.parcelListTitle)}
+          >
             {isLoading ? (
-              <p>Loading parcels…</p>
+              <p>{t(uiText.official.loadingParcels)}</p>
             ) : parcelRows.length > 0 ? (
               <DataTable
-                caption="Filtered parcel list"
+                caption={t(uiText.official.listCaption)}
                 columns={[
-                  'Survey',
-                  'Village',
-                  'District',
-                  'Stage',
-                  'Days in stage',
-                  'Status',
-                  'Missing docs',
-                  'Open objections',
+                  t(uiText.official.colSurvey),
+                  t(uiText.official.colVillage),
+                  t(uiText.official.colDistrict),
+                  t(uiText.official.colStage),
+                  t(uiText.official.colDaysInStage),
+                  t(uiText.official.colStatus),
+                  t(uiText.official.colMissingDocs),
+                  t(uiText.official.colOpenObjections),
                 ]}
                 rows={parcelRows}
               />
             ) : (
               <EmptyState
-                title="No parcels match these filters"
-                description="Adjust the survey number, district, stage, or status filters."
+                title={t(uiText.official.noParcelsMatchTitle)}
+                description={t(uiText.official.adjustFiltersDescription)}
               />
             )}
           </Card>

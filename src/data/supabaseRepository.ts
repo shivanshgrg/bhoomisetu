@@ -2,7 +2,9 @@ import { supabase } from '../lib/supabaseClient';
 import type {
   AcquisitionParcel,
   AcquisitionProject,
+  DocumentCheckVerdict,
   DocumentKind,
+  DocumentStatus,
   ISODateString,
   ObjectionStatus,
   OfficialRole,
@@ -19,6 +21,7 @@ import type {
   AdvanceStageInput,
   ParcelRepository,
   UpdateObjectionStatusInput,
+  VerifyDocumentInput,
 } from './types';
 
 // Row shapes mirror supabase/schema.sql exactly (snake_case columns).
@@ -80,6 +83,11 @@ type DocumentRow = {
   uploaded_by_role: OfficialRole;
   file_type: 'pdf' | 'image';
   url: string;
+  status: DocumentStatus;
+  rejection_reason: string | null;
+  reviewed_by_role: OfficialRole | null;
+  reviewed_on: string | null;
+  quality_check_verdict: DocumentCheckVerdict | null;
 };
 
 type ObjectionRow = {
@@ -126,6 +134,11 @@ function mapDocumentRow(row: DocumentRow): ParcelDocument {
     uploadedByRole: row.uploaded_by_role,
     fileType: row.file_type,
     url: row.url,
+    status: row.status,
+    rejectionReason: row.rejection_reason ?? undefined,
+    reviewedByRole: row.reviewed_by_role ?? undefined,
+    reviewedOn: row.reviewed_on ? (row.reviewed_on as ISODateString) : undefined,
+    qualityCheckVerdict: row.quality_check_verdict ?? undefined,
   };
 }
 
@@ -285,6 +298,11 @@ export const supabaseRepository: ParcelRepository = {
       uploaded_by_role: input.uploadedByRole,
       file_type: input.fileType,
       url: input.url,
+      status: input.status ?? 'pending_verification',
+      rejection_reason: null,
+      reviewed_by_role: null,
+      reviewed_on: null,
+      quality_check_verdict: input.qualityCheckVerdict ?? null,
     };
 
     const { error } = await client.from('documents').insert(row);
@@ -293,6 +311,27 @@ export const supabaseRepository: ParcelRepository = {
     }
 
     return mapDocumentRow(row);
+  },
+
+  async verifyDocument({ documentId, status, reviewedByRole, reviewedOn, rejectionReason }: VerifyDocumentInput) {
+    const client = requireClient();
+    const { data, error } = await client
+      .from('documents')
+      .update({
+        status,
+        reviewed_by_role: reviewedByRole,
+        reviewed_on: reviewedOn,
+        rejection_reason: status === 'rejected' ? rejectionReason ?? null : null,
+      })
+      .eq('id', documentId)
+      .select()
+      .single<DocumentRow>();
+
+    if (error) {
+      throw error;
+    }
+
+    return mapDocumentRow(data);
   },
 
   async addObjection(input: AddObjectionInput) {

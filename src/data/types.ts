@@ -1,6 +1,7 @@
 import type {
   AcquisitionParcel,
   AcquisitionProject,
+  DocumentStatus,
   ISODateString,
   ObjectionStatus,
   OfficialRole,
@@ -17,7 +18,12 @@ export type AdvanceStageInput = {
   enteredOn: ISODateString;
 };
 
-export type AddDocumentInput = Omit<ParcelDocument, 'id'>;
+// `status` defaults to 'pending_verification' in each implementation when
+// omitted (mirrors demoData's seeded documents, which pass 'verified'
+// explicitly instead) — see Step 27 handoff notes in IMPLEMENTATION_PROGRESS.md.
+export type AddDocumentInput = Omit<ParcelDocument, 'id' | 'status'> & {
+  status?: DocumentStatus;
+};
 
 export type AddObjectionInput = Omit<ParcelObjection, 'id' | 'status' | 'updatedOn'> & {
   status?: ObjectionStatus;
@@ -27,6 +33,14 @@ export type UpdateObjectionStatusInput = {
   objectionId: string;
   status: ObjectionStatus;
   updatedOn: ISODateString;
+};
+
+export type VerifyDocumentInput = {
+  documentId: string;
+  status: Extract<DocumentStatus, 'verified' | 'rejected'>;
+  reviewedByRole: OfficialRole;
+  reviewedOn: ISODateString;
+  rejectionReason?: string;
 };
 
 /**
@@ -40,6 +54,7 @@ export interface ParcelRepository {
   getParcelBySurveyNumber(surveyNumber: string): Promise<AcquisitionParcel | undefined>;
   advanceParcelStage(input: AdvanceStageInput): Promise<AcquisitionParcel>;
   addDocument(input: AddDocumentInput): Promise<ParcelDocument>;
+  verifyDocument(input: VerifyDocumentInput): Promise<ParcelDocument>;
   addObjection(input: AddObjectionInput): Promise<ParcelObjection>;
   updateObjectionStatus(input: UpdateObjectionStatusInput): Promise<ParcelObjection>;
   listProjects(): Promise<AcquisitionProject[]>;

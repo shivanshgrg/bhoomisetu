@@ -6,6 +6,7 @@ import type {
   AdvanceStageInput,
   ParcelRepository,
   UpdateObjectionStatusInput,
+  VerifyDocumentInput,
 } from './types';
 
 function cloneParcels(): AcquisitionParcel[] {
@@ -96,9 +97,37 @@ export const demoRepository: ParcelRepository = {
     const document: ParcelDocument = {
       ...input,
       id: `${input.parcelId}-document-${input.kind}-${parcel.documents.length + 1}`,
+      status: input.status ?? 'pending_verification',
     };
     replaceParcel(index, { ...parcel, documents: [...parcel.documents, document] });
     return document;
+  },
+
+  async verifyDocument({ documentId, status, reviewedByRole, reviewedOn, rejectionReason }: VerifyDocumentInput) {
+    const index = parcels.findIndex((candidate) =>
+      candidate.documents.some((document) => document.id === documentId),
+    );
+    if (index === -1) {
+      throw new Error(`Unknown document id: ${documentId}`);
+    }
+
+    const parcel = parcels[index];
+    let updatedDocument: ParcelDocument | undefined;
+    const documents = parcel.documents.map((document) => {
+      if (document.id !== documentId) {
+        return document;
+      }
+      updatedDocument = {
+        ...document,
+        status,
+        reviewedByRole,
+        reviewedOn,
+        rejectionReason: status === 'rejected' ? rejectionReason : undefined,
+      };
+      return updatedDocument;
+    });
+    replaceParcel(index, { ...parcel, documents });
+    return updatedDocument as ParcelDocument;
   },
 
   async addObjection(input) {

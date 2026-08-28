@@ -12,21 +12,24 @@ export const OFFICIAL_ROLES = [
 ] as const;
 export type OfficialRole = (typeof OFFICIAL_ROLES)[number];
 
-// Prototype-only stakeholder view picker (Step 17). This is NOT real access
-// control — it just biases which page a viewer lands on and labels the
-// current view. Nothing in the repository/data layer is scoped by this role.
-export const STAKEHOLDER_ROLES = [
-  'central_state_viewer',
+// Prototype-only application role picker (Step 17, renamed/expanded in Step
+// 23). This is NOT real access control on its own — it biases which page a
+// viewer lands on and labels the current view. Nothing in the repository/data
+// layer is scoped by this role yet (scoping arrives in Step 26).
+export const APP_ROLES = [
+  'national_admin',
+  'state_authority',
   'district_officer',
-  'project_agency',
+  'field_officer',
   'landowner',
 ] as const;
-export type StakeholderRole = (typeof STAKEHOLDER_ROLES)[number];
+export type AppRole = (typeof APP_ROLES)[number];
 
-export const STAKEHOLDER_ROLE_LABELS: Record<StakeholderRole, string> = {
-  central_state_viewer: 'Central / State Viewer',
+export const APP_ROLE_LABELS: Record<AppRole, string> = {
+  national_admin: 'National Admin',
+  state_authority: 'State Authority',
   district_officer: 'District Officer',
-  project_agency: 'Project Implementing Agency',
+  field_officer: 'Field Officer',
   landowner: 'Landowner',
 };
 
@@ -51,6 +54,15 @@ export type ObjectionReason = (typeof OBJECTION_REASONS)[number]['id'];
 export const OBJECTION_REASON_LABELS: Record<ObjectionReason, string> = Object.fromEntries(
   OBJECTION_REASONS.map((objectionReason) => [objectionReason.id, objectionReason.label]),
 ) as Record<ObjectionReason, string>;
+
+export const DOCUMENT_STATUSES = ['pending_verification', 'verified', 'rejected'] as const;
+export type DocumentStatus = (typeof DOCUMENT_STATUSES)[number];
+
+export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
+  pending_verification: 'Pending Verification',
+  verified: 'Verified',
+  rejected: 'Rejected',
+};
 
 export const DOCUMENT_KINDS = [
   { id: 'section_11_notification', label: 'Section 11 notification' },
@@ -219,4 +231,16 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   at_risk: 'At Risk',
   delayed: 'Delayed',
   complete: 'Complete',
+};
+
+// Step 30: deterministic 0-100 risk score bucketed into these four levels —
+// see src/domain/risk.ts for the scoring breakdown.
+export const RISK_LEVELS = ['low', 'medium', 'high', 'critical'] as const;
+export type RiskLevel = (typeof RISK_LEVELS)[number];
+
+export const RISK_LEVEL_LABELS: Record<RiskLevel, string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High',
+  critical: 'Critical',
 };
