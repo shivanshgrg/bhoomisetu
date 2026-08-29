@@ -12,6 +12,7 @@ import {
   SelectField,
   TextField,
 } from '../components/ui';
+import { AuditChainLedger } from '../components/AuditChainLedger';
 import { SmsPreviewPanel } from '../components/SmsPreviewPanel';
 import { repository } from '../data';
 import { uploadDocumentFile } from '../data/upload';
@@ -353,16 +354,6 @@ export function ParcelDetailPage() {
   const currentStageOrder = getStageDefinition(parcel.currentStage).order;
   const documentsForStage = getDocumentsForStage(parcel);
 
-  const historyRows = [...parcel.history]
-    .sort((first, second) => getStageDefinition(first.stage).order - getStageDefinition(second.stage).order)
-    .map((entry) => [
-      t(stageLabels[entry.stage]),
-      entry.enteredOn,
-      entry.exitedOn ?? '—',
-      t(officialRoleLabels[entry.handledByRole]),
-      entry.note,
-    ]);
-
   const documentRows = parcel.documents.map((document) => [
     t(stageShortLabels[document.stage]),
     t(documentKindLabels[document.kind]),
@@ -637,22 +628,9 @@ export function ParcelDetailPage() {
         />
       </Card>
 
-      <Card eyebrow={t(uiText.parcelDetail.timelineEyebrow)} title={t(uiText.parcelDetail.stageHistoryTitle)}>
-        {historyRows.length > 0 ? (
-          <DataTable
-            caption={t(uiText.parcelDetail.historyCaption)}
-            columns={[
-              t(uiText.parcelDetail.colStage),
-              t(uiText.parcelDetail.colEntered),
-              t(uiText.parcelDetail.colExited),
-              t(uiText.parcelDetail.colHandledBy),
-              t(uiText.parcelDetail.colNote),
-            ]}
-            rows={historyRows}
-          />
-        ) : (
-          <EmptyState title={t(uiText.parcelDetail.noHistoryTitle)} description={t(uiText.parcelDetail.noHistoryDescription)} />
-        )}
+      <Card eyebrow={t(uiText.auditChain.eyebrow)} title={t(uiText.auditChain.title)}>
+        <p>{t(uiText.auditChain.description)}</p>
+        <AuditChainLedger history={parcel.history} />
       </Card>
 
       <Card eyebrow={t(uiText.parcelDetail.uploadEyebrow)} title={t(uiText.parcelDetail.uploadDocumentTitle)}>

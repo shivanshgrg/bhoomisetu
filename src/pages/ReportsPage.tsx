@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { StageDurationChart } from '../components/StageDurationChart';
 import { Badge, Button, Card, DataTable, EmptyState, PageContainer, PageHeader } from '../components/ui';
 import { repository } from '../data';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -10,6 +11,7 @@ import {
   getActionCenterQueue,
   getDashboardSummary,
   getNationalSummary,
+  getStageDurationStats,
   scopeParcelsToSession,
   scopeProjectsToSession,
   type AcquisitionParcel,
@@ -70,6 +72,8 @@ export function ReportsPage() {
     () => getActionCenterQueue(scopedParcels, scopedProjects).slice(0, TOP_RISK_PARCEL_COUNT),
     [scopedParcels, scopedProjects],
   );
+  const stageDurationStats = useMemo(() => getStageDurationStats(scopedParcels), [scopedParcels]);
+  const hasStageDurationData = stageDurationStats.some((stat) => stat.sampleSize > 0);
 
   const summaryRows = [
     [t(uiText.reports.totalParcelsLabel), dashboardSummary.total],
@@ -159,6 +163,20 @@ export function ReportsPage() {
               columns={[t(uiText.reports.colStage), t(uiText.reports.colCount)]}
               rows={stageRows}
             />
+          </Card>
+
+          <Card eyebrow={t(uiText.stageDurationChart.eyebrow)} title={t(uiText.stageDurationChart.title)}>
+            {hasStageDurationData ? (
+              <>
+                <p>{t(uiText.stageDurationChart.caption)}</p>
+                <StageDurationChart stats={stageDurationStats} />
+              </>
+            ) : (
+              <EmptyState
+                title={t(uiText.stageDurationChart.noDataTitle)}
+                description={t(uiText.stageDurationChart.noDataDescription)}
+              />
+            )}
           </Card>
 
           <Card

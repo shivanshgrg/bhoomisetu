@@ -676,6 +676,67 @@ export const uiText = {
       hi: 'अभी तक कोई अधिग्रहण परियोजना कॉन्फ़िगर नहीं की गई है।',
     } as TranslationEntry,
   },
+  timeline: {
+    eyebrow: { en: 'Timeline adherence', hi: 'समय-सीमा अनुपालन' } as TranslationEntry,
+    title: { en: 'Project Timeline', hi: 'परियोजना समयरेखा' } as TranslationEntry,
+    description: {
+      en: 'Sanctioned-to-target span for every project, with progress and today marked.',
+      hi: 'हर परियोजना का स्वीकृति से लक्ष्य तक का दायरा, प्रगति और आज की तारीख के साथ।',
+    } as TranslationEntry,
+    todayLabel: { en: 'Today', hi: 'आज' } as TranslationEntry,
+    tableFallbackTitle: { en: 'Timeline hidden in Data Saver mode', hi: 'डेटा सेवर मोड में समयरेखा छिपी हुई है' } as TranslationEntry,
+    tableFallbackDescription: {
+      en: 'Turn off Data Saver to view the project timeline chart.',
+      hi: 'परियोजना समयरेखा चार्ट देखने के लिए डेटा सेवर बंद करें।',
+    } as TranslationEntry,
+  },
+  auditChain: {
+    eyebrow: { en: 'Tamper-evident record', hi: 'छेड़छाड़-रोधी अभिलेख' } as TranslationEntry,
+    title: { en: 'Stage History Ledger', hi: 'चरण इतिहास लेजर' } as TranslationEntry,
+    description: {
+      en: 'Each stage transition is chained by hash to the one before it — editing any entry breaks verification from that point onward.',
+      hi: 'हर चरण परिवर्तन हैश द्वारा पिछले से जुड़ा है — किसी भी प्रविष्टि में बदलाव उस बिंदु से आगे सत्यापन को तोड़ देता है।',
+    } as TranslationEntry,
+    historyCaption: { en: 'Stage-by-stage history for this parcel', hi: 'इस भूखंड का चरण-दर-चरण इतिहास' } as TranslationEntry,
+    colStage: { en: 'Stage', hi: 'चरण' } as TranslationEntry,
+    colEntered: { en: 'Entered', hi: 'प्रवेश तिथि' } as TranslationEntry,
+    colExited: { en: 'Exited', hi: 'निकास तिथि' } as TranslationEntry,
+    colHandledBy: { en: 'Handled by', hi: 'द्वारा संभाला गया' } as TranslationEntry,
+    colNote: { en: 'Note', hi: 'टिप्पणी' } as TranslationEntry,
+    emptyTitle: { en: 'No stage history yet', hi: 'अभी तक कोई चरण इतिहास नहीं' } as TranslationEntry,
+    emptyDescription: {
+      en: 'This parcel has not entered any workflow stage yet.',
+      hi: 'यह भूखंड अभी तक किसी कार्यप्रवाह चरण में प्रवेश नहीं किया है।',
+    } as TranslationEntry,
+    sealing: { en: 'Sealing ledger…', hi: 'लेजर सील किया जा रहा है…' } as TranslationEntry,
+    chainVerifiedPrefix: { en: 'Chain verified —', hi: 'श्रृंखला सत्यापित —' } as TranslationEntry,
+    chainBrokenPrefix: { en: 'Chain broken —', hi: 'श्रृंखला टूटी हुई —' } as TranslationEntry,
+    ofWord: { en: 'of', hi: 'में से' } as TranslationEntry,
+    linksIntactSuffix: { en: 'links intact', hi: 'लिंक अक्षुण्ण' } as TranslationEntry,
+    simulateTamperButton: { en: 'Simulate tampering', hi: 'छेड़छाड़ का अनुकरण करें' } as TranslationEntry,
+    resetButton: { en: 'Reset', hi: 'रीसेट करें' } as TranslationEntry,
+    sealedBadge: { en: 'Sealed', hi: 'सील बंद' } as TranslationEntry,
+    brokenBadge: { en: 'Broken', hi: 'टूटा हुआ' } as TranslationEntry,
+    ongoingWord: { en: 'ongoing', hi: 'जारी' } as TranslationEntry,
+    hashLabel: { en: 'Hash:', hi: 'हैश:' } as TranslationEntry,
+    prevHashLabel: { en: 'Prev:', hi: 'पिछला:' } as TranslationEntry,
+  },
+  stageDurationChart: {
+    eyebrow: { en: 'Pipeline analysis', hi: 'पाइपलाइन विश्लेषण' } as TranslationEntry,
+    title: { en: 'Average Time per Stage', hi: 'प्रति चरण औसत समय' } as TranslationEntry,
+    caption: {
+      en: 'Average actual duration in each stage against its SLA threshold, based on completed stage transitions in scope.',
+      hi: 'दायरे में पूर्ण हुए चरण परिवर्तनों के आधार पर, प्रत्येक चरण की SLA सीमा की तुलना में औसत वास्तविक अवधि।',
+    } as TranslationEntry,
+    thresholdLabel: { en: 'SLA threshold', hi: 'SLA सीमा' } as TranslationEntry,
+    slaSuffix: { en: 'SLA', hi: 'SLA' } as TranslationEntry,
+    averageActualLabel: { en: 'Average actual', hi: 'औसत वास्तविक' } as TranslationEntry,
+    noDataTitle: { en: 'No completed stage transitions yet', hi: 'अभी तक कोई पूर्ण चरण परिवर्तन नहीं' } as TranslationEntry,
+    noDataDescription: {
+      en: 'Stage duration data appears once parcels in scope have advanced past at least one stage.',
+      hi: 'चरण अवधि डेटा तब दिखाई देगा जब दायरे के भूखंड कम से कम एक चरण से आगे बढ़ चुके होंगे।',
+    } as TranslationEntry,
+  },
 };
 
 export const stageLabels: Record<StageId, TranslationEntry> = {

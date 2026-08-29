@@ -159,6 +159,7 @@ export type ProjectCalculatedStatus = {
   compensationPaid: number;
   compensationPaidPercent: number;
   possessionPercent: number;
+  progressPercent: number;
   daysToTarget: number;
 };
 
@@ -191,6 +192,14 @@ export type NationalSummary = {
 export type RiskContributor = {
   label: string;
   points: number;
+};
+
+export type StageDurationStat = {
+  stage: StageId;
+  averageDays: number;
+  thresholdDays: number;
+  sampleSize: number;
+  isOverThreshold: boolean;
 };
 
 export type ParcelRiskAssessment = {

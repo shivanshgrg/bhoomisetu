@@ -20,6 +20,7 @@ import type {
   ParcelDocument,
   ParcelObjection,
   ProjectCalculatedStatus,
+  StageDurationStat,
 } from './types';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -261,6 +262,7 @@ export function getProjectCalculatedStatus(
     compensationPaidPercent:
       compensationAssessed === 0 ? 0 : Math.round((compensationPaid / compensationAssessed) * 100),
     possessionPercent: parcelCount === 0 ? 0 : Math.round((parcelsAtPossession / parcelCount) * 100),
+    progressPercent: Math.round(Math.min(1, progressFraction) * 100),
     daysToTarget,
   };
 }
@@ -389,4 +391,37 @@ export function getAttentionParcels(
         calculatedStatus.status === 'stuck' || calculatedStatus.status === 'blocked',
     )
     .sort((first, second) => second.calculatedStatus.daysInStage - first.calculatedStatus.daysInStage);
+}
+
+// Average actual time spent per stage vs. its SLA threshold, using only
+// completed history entries (those with an exitedOn). A parcel's current,
+// still-open stage is deliberately excluded — its duration isn't final yet,
+// so mixing it in would understate the average for stages most parcels are
+// presently sitting in.
+export function getStageDurationStats(parcels: AcquisitionParcel[]): StageDurationStat[] {
+  const totalsByStage = new Map<StageId, { totalDays: number; count: number }>();
+
+  parcels.forEach((parcel) => {
+    parcel.history.forEach((entry) => {
+      if (!entry.exitedOn) {
+        return;
+      }
+      const duration = daysBetween(entry.enteredOn, entry.exitedOn);
+      const existing = totalsByStage.get(entry.stage) ?? { totalDays: 0, count: 0 };
+      totalsByStage.set(entry.stage, { totalDays: existing.totalDays + duration, count: existing.count + 1 });
+    });
+  });
+
+  return ACQUISITION_STAGES.map((stage) => {
+    const totals = totalsByStage.get(stage.id);
+    const averageDays = totals && totals.count > 0 ? Math.round((totals.totalDays / totals.count) * 10) / 10 : 0;
+
+    return {
+      stage: stage.id,
+      averageDays,
+      thresholdDays: stage.thresholdDays,
+      sampleSize: totals?.count ?? 0,
+      isOverThreshold: averageDays > stage.thresholdDays,
+    };
+  });
 }

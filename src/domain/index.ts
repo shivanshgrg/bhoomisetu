@@ -1,4 +1,5 @@
 export * from './access';
+export * from './auditChain';
 export * from './constants';
 export * from './demoData';
 export * from './documentCheck';
@@ -6,4 +7,5 @@ export * from './geo';
 export * from './risk';
 export * from './rules';
 export * from './smsPreview';
+export * from './timeline';
 export * from './types';

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ProjectTimeline } from '../components/ProjectTimeline';
 import { Badge, Card, DataTable, EmptyState, PageContainer, PageHeader } from '../components/ui';
 import { repository } from '../data';
+import { useDataSaver } from '../i18n/DataSaverContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useSession } from '../i18n/SessionContext';
 import { appRoleLabels, projectStatusLabels, uiText } from '../i18n/translations';
@@ -25,6 +27,7 @@ function formatHectares(amount: number) {
 
 export function NationalDashboardPage() {
   const { session } = useSession();
+  const { isDataSaverOn } = useDataSaver();
   const { t } = useLanguage();
   const role = session?.role;
   const [projects, setProjects] = useState<AcquisitionProject[]>([]);
@@ -202,6 +205,27 @@ export function NationalDashboardPage() {
               </p>
             </Card>
           </section>
+
+          <Card eyebrow={t(uiText.timeline.eyebrow)} title={t(uiText.timeline.title)}>
+            {isLoading ? (
+              <p>{t(uiText.nationalDashboard.loadingNationalDashboard)}</p>
+            ) : isDataSaverOn ? (
+              <EmptyState
+                title={t(uiText.timeline.tableFallbackTitle)}
+                description={t(uiText.timeline.tableFallbackDescription)}
+              />
+            ) : scopedProjects.length > 0 ? (
+              <>
+                <p>{t(uiText.timeline.description)}</p>
+                <ProjectTimeline projects={scopedProjects} statuses={nationalSummary.projectStatuses} />
+              </>
+            ) : (
+              <EmptyState
+                title={t(uiText.nationalDashboard.noProjectsFoundTitle)}
+                description={t(uiText.nationalDashboard.noProjectsFoundDescription)}
+              />
+            )}
+          </Card>
 
           <Card
             eyebrow={`${scopedProjects.length} ${t(uiText.nationalDashboard.projectsSuffix)}`}
