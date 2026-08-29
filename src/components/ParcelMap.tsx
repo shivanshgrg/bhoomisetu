@@ -30,13 +30,14 @@ const PROJECT_COLORS = [
 
 // Mirrors statusDisplay.ts's getBadgeTone tone names to actual map colors
 // (that file only produces CSS class names, which Leaflet's SVG layers
-// can't consume directly).
+// can't consume directly). Kept in step with the badge-* tone colors in
+// styles.css so a marker and its popup badge always read as the same status.
 const TONE_COLORS: Record<string, string> = {
-  success: '#237345',
-  warning: '#9d6415',
-  danger: '#a73730',
-  info: '#235c96',
-  neutral: '#5b6b68',
+  success: '#2f6f4f',
+  warning: '#b45309',
+  danger: '#b3261e',
+  info: '#3a5a8c',
+  neutral: '#8b8577',
 };
 
 type ColorMode = 'project' | 'status';

@@ -1,8 +1,13 @@
+import { motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Badge, Button, Card, PageContainer, SelectField } from '../components/ui';
+import { CapabilityModal } from '../components/landing/CapabilityModal';
+import { LandingNav } from '../components/landing/LandingNav';
+import { Reveal, RevealLine } from '../components/landing/Reveal';
+import { StageWalk, type WalkStage } from '../components/landing/StageWalk';
 import { repository } from '../data';
 import {
+  ACQUISITION_STAGES,
   APP_ROLES,
   APP_ROLE_LABELS,
   STATE_NAME_LABELS,
@@ -14,6 +19,8 @@ import {
 import { useLanguage } from '../i18n/LanguageContext';
 import { useSession } from '../i18n/SessionContext';
 import { uiText } from '../i18n/translations';
+import '../styles/landing.css';
+import { useTheme } from '../theme/ThemeContext';
 
 // Where each app role lands by default. This is a demo convenience, not real
 // access control — see the APP_ROLES comment in src/domain/constants.ts.
@@ -33,10 +40,43 @@ function requiresDistrictScope(role: AppRole | undefined): boolean {
   return role === 'district_officer' || role === 'field_officer';
 }
 
+const STEP_BODY_BY_STAGE_ID: Record<string, keyof typeof uiText.landing> = {
+  notification: 'stepNotificationBody',
+  survey: 'stepSurveyBody',
+  objection_review: 'stepObjectionBody',
+  valuation: 'stepValuationBody',
+  compensation_approval: 'stepApprovalBody',
+  award: 'stepAwardBody',
+  possession: 'stepPossessionBody',
+};
+
+const CAPABILITIES = [
+  { titleKey: 'capabilityAccessTitle', bodyKey: 'capabilityAccessBody', detailKey: 'capabilityAccessDetail' },
+  {
+    titleKey: 'capabilityVerificationTitle',
+    bodyKey: 'capabilityVerificationBody',
+    detailKey: 'capabilityVerificationDetail',
+  },
+  { titleKey: 'capabilityRiskTitle', bodyKey: 'capabilityRiskBody', detailKey: 'capabilityRiskDetail' },
+  { titleKey: 'capabilityReportsTitle', bodyKey: 'capabilityReportsBody', detailKey: 'capabilityReportsDetail' },
+  { titleKey: 'capabilityAuditTitle', bodyKey: 'capabilityAuditBody', detailKey: 'capabilityAuditDetail' },
+  {
+    titleKey: 'capabilityTimelineTitle',
+    bodyKey: 'capabilityTimelineBody',
+    detailKey: 'capabilityTimelineDetail',
+  },
+] as const satisfies ReadonlyArray<{
+  titleKey: keyof typeof uiText.landing;
+  bodyKey: keyof typeof uiText.landing;
+  detailKey: keyof typeof uiText.landing;
+}>;
+
 export function LandingPage() {
   const { t } = useLanguage();
+  const { theme } = useTheme();
   const { session, setSession } = useSession();
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
 
   const [projects, setProjects] = useState<AcquisitionProject[]>([]);
   const [parcels, setParcels] = useState<AcquisitionParcel[]>([]);
@@ -44,6 +84,7 @@ export function LandingPage() {
   const [pendingRole, setPendingRole] = useState<AppRole | undefined>(session?.role);
   const [stateScope, setStateScope] = useState<StateName | undefined>(session?.stateScope);
   const [districtScope, setDistrictScope] = useState<string | undefined>(session?.districtScope);
+  const [activeCapabilityIndex, setActiveCapabilityIndex] = useState<number | null>(null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -95,11 +136,12 @@ export function LandingPage() {
     (!needsState || stateScope !== undefined) &&
     (!needsDistrict || districtScope !== undefined);
 
-  const serviceStats = [
-    { label: t(uiText.landing.statWorkflowLabel), value: '7' },
-    { label: t(uiText.landing.statPortalsLabel), value: '2' },
-    { label: t(uiText.landing.statDemoLabel), value: '124/7' },
-  ];
+  const walkStages: WalkStage[] = ACQUISITION_STAGES.map((stage) => ({
+    id: stage.id,
+    label: stage.label,
+    shortLabel: stage.shortLabel,
+    body: t(uiText.landing[STEP_BODY_BY_STAGE_ID[stage.id]]),
+  }));
 
   function handlePickRole(nextRole: AppRole) {
     setPendingRole(nextRole);
@@ -124,109 +166,275 @@ export function LandingPage() {
     navigate(ROLE_DESTINATION[pendingRole]);
   }
 
+  const heroRise = prefersReducedMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 16 },
+        animate: { opacity: 1, y: 0 },
+      };
+
   return (
-    <PageContainer>
-      <section className="landing-hero" aria-labelledby="landing-title">
-        <div>
-          <Badge tone="info">{t(uiText.landing.badge)}</Badge>
-          <h1 id="landing-title">BhoomiSetu</h1>
-          <p>{t(uiText.landing.description)}</p>
-        </div>
-        <div className="hero-actions" aria-label="Choose portal">
-          <Link className="role-tile role-official" to="/official">
-            <span>{t(uiText.landing.officialTitle)}</span>
-            <strong>{t(uiText.landing.officialDescription)}</strong>
-          </Link>
-          <Link className="role-tile role-landowner" to="/landowner">
-            <span>{t(uiText.landing.landownerTitle)}</span>
-            <strong>{t(uiText.landing.landownerDescription)}</strong>
-          </Link>
-        </div>
-      </section>
+    <div className="bs-landing" data-theme={theme} id="top">
+      <LandingNav />
 
-      <section className="stat-band" aria-label="Prototype scope">
-        {serviceStats.map((stat) => (
-          <div key={stat.label}>
-            <strong>{stat.value}</strong>
-            <span>{stat.label}</span>
-          </div>
-        ))}
-      </section>
+      <main>
+        <section className="bs-section bs-hero" aria-labelledby="landing-title">
+          <div className="bs-shell bs-hero-grid">
+            <div className="bs-hero-lead">
+              <motion.span
+                className="bs-eyebrow"
+                {...heroRise}
+                transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+              >
+                {t(uiText.landing.badge)}
+              </motion.span>
+              <h1 id="landing-title">
+                <RevealLine immediate index={0}>
+                  {t(uiText.landing.headlineMain)}
+                </RevealLine>{' '}
+                <RevealLine immediate index={1}>
+                  <span className="bs-muted">{t(uiText.landing.headlineMuted)}</span>
+                </RevealLine>
+              </h1>
+            </div>
 
-      <Card eyebrow="Prototype convenience — not real security" title="I am viewing as…">
-        <p>
-          Pick a stakeholder role to sign in as. National and state-level roles see the full dashboard;
-          district and field roles also choose the state and district they represent.
-        </p>
-        <div className="role-picker-grid" role="group" aria-label="App role picker">
-          {APP_ROLES.map((appRole) => (
-            <button
-              key={appRole}
-              type="button"
-              className={
-                pendingRole === appRole ? 'role-picker-option role-picker-option-active' : 'role-picker-option'
-              }
-              aria-pressed={pendingRole === appRole}
-              onClick={() => handlePickRole(appRole)}
+            <motion.div
+              className="bs-hero-aside"
+              {...heroRise}
+              transition={{ duration: 0.5, delay: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
             >
-              {APP_ROLE_LABELS[appRole]}
-            </button>
-          ))}
+              <p>{t(uiText.landing.description)}</p>
+              <div className="bs-hero-actions">
+                <a className="bs-btn bs-btn-amber" href="#sign-in">
+                  <span>{t(uiText.landing.heroCtaPrimary)}</span>
+                  <span className="bs-btn-arrow" aria-hidden="true">
+                    ↗
+                  </span>
+                </a>
+                <a className="bs-btn bs-btn-outline" href="#portals">
+                  <span>{t(uiText.landing.heroCtaSecondary)}</span>
+                  <span className="bs-btn-arrow" aria-hidden="true">
+                    ↗
+                  </span>
+                </a>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        <section className="bs-section" id="portals" aria-label="Choose portal">
+          <div className="bs-shell">
+            <div className="bs-section-head">
+              <div>
+                <span className="bs-eyebrow">{t(uiText.landing.portalsEyebrow)}</span>
+                <h2>
+                  <RevealLine>{t(uiText.landing.portalsHeading)}</RevealLine>
+                </h2>
+              </div>
+              <p>{t(uiText.landing.portalsIntro)}</p>
+            </div>
+
+            <div className="bs-portals">
+              {[
+                {
+                  to: '/official',
+                  index: '01',
+                  title: t(uiText.landing.officialTitle),
+                  body: t(uiText.landing.officialDescription),
+                },
+                {
+                  to: '/landowner',
+                  index: '02',
+                  title: t(uiText.landing.landownerTitle),
+                  body: t(uiText.landing.landownerDescription),
+                },
+              ].map((portal, index) => (
+                <Reveal className="bs-portal-cell" index={index} key={portal.to}>
+                  <Link className="bs-portal" to={portal.to}>
+                    <span className="bs-portal-index">{portal.index}</span>
+                    <div className="bs-portal-text">
+                      <h3>{portal.title}</h3>
+                      <p>{portal.body}</p>
+                    </div>
+                    <span className="bs-portal-link">
+                      {t(uiText.landing.portalLinkLabel)}
+                      <span className="bs-btn-arrow" aria-hidden="true">
+                        ↗
+                      </span>
+                    </span>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bs-section bs-journey" id="journey">
+          <div className="bs-shell">
+            <div className="bs-section-head">
+              <div>
+                <span className="bs-eyebrow">{t(uiText.landing.howItWorksEyebrow)}</span>
+                <h2>
+                  <RevealLine>{t(uiText.landing.howItWorksHeading)}</RevealLine>
+                </h2>
+              </div>
+              <p>{t(uiText.landing.howItWorksIntro)}</p>
+            </div>
+          </div>
+          <StageWalk stages={walkStages} />
+        </section>
+
+        <section className="bs-section" id="capabilities">
+          <div className="bs-shell">
+            <div className="bs-section-head">
+              <div>
+                <span className="bs-eyebrow">{t(uiText.landing.capabilitiesEyebrow)}</span>
+                <h2>
+                  <RevealLine>{t(uiText.landing.capabilitiesHeading)}</RevealLine>
+                </h2>
+              </div>
+              <p>{t(uiText.landing.capabilitiesIntro)}</p>
+            </div>
+
+            <div className="bs-capabilities">
+              {CAPABILITIES.map((capability, index) => (
+                <Reveal className="bs-capability-cell" index={index} key={capability.titleKey}>
+                  <button
+                    type="button"
+                    className="bs-capability"
+                    aria-haspopup="dialog"
+                    onClick={() => setActiveCapabilityIndex(index)}
+                  >
+                    <span className="bs-capability-index">{String(index + 1).padStart(2, '0')}</span>
+                    <h3>{t(uiText.landing[capability.titleKey])}</h3>
+                    <p>{t(uiText.landing[capability.bodyKey])}</p>
+                    <span className="bs-capability-expand" aria-hidden="true">
+                      ↗
+                    </span>
+                  </button>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="bs-section" id="sign-in">
+          <div className="bs-shell">
+            <div className="bs-panel">
+              <div className="bs-panel-bar">
+                <h2>I am viewing as…</h2>
+                <span>Prototype convenience — not real security</span>
+              </div>
+              <div className="bs-panel-body">
+                <p>
+                  Pick a stakeholder role to sign in as. National and state-level roles see the full dashboard;
+                  district and field roles also choose the state and district they represent.
+                </p>
+
+                <div className="bs-role-grid" role="group" aria-label="App role picker">
+                  {APP_ROLES.map((appRole) => (
+                    <button
+                      key={appRole}
+                      type="button"
+                      className={
+                        pendingRole === appRole ? 'bs-role-option bs-role-option-active' : 'bs-role-option'
+                      }
+                      aria-pressed={pendingRole === appRole}
+                      onClick={() => handlePickRole(appRole)}
+                    >
+                      <span>{APP_ROLE_LABELS[appRole]}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {(needsState || (needsDistrict && stateScope)) && (
+                  <div className="bs-field-grid">
+                    {needsState && (
+                      <label className="bs-field" htmlFor="landing-state-scope">
+                        <span>State</span>
+                        <select
+                          id="landing-state-scope"
+                          value={stateScope ?? ''}
+                          onChange={(event) => handleStateChange(event.target.value)}
+                        >
+                          <option value="">Select a state…</option>
+                          {stateOptions.map((state) => (
+                            <option key={state} value={state}>
+                              {STATE_NAME_LABELS[state]}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+
+                    {needsDistrict && stateScope && (
+                      <label className="bs-field" htmlFor="landing-district-scope">
+                        <span>District</span>
+                        <select
+                          id="landing-district-scope"
+                          value={districtScope ?? ''}
+                          onChange={(event) => setDistrictScope(event.target.value || undefined)}
+                        >
+                          <option value="">Select a district…</option>
+                          {districtOptions.map((district) => (
+                            <option key={district} value={district}>
+                              {district}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                  </div>
+                )}
+
+                <div className="bs-panel-foot">
+                  {pendingRole && (
+                    <button
+                      type="button"
+                      className="bs-btn bs-btn-amber"
+                      disabled={!canSignIn}
+                      onClick={handleSignIn}
+                    >
+                      <span>Sign in as {APP_ROLE_LABELS[pendingRole]}</span>
+                      <span className="bs-btn-arrow" aria-hidden="true">
+                        ↗
+                      </span>
+                    </button>
+                  )}
+
+                  {session && (
+                    <p className="bs-session-note">
+                      Currently viewing as <span className="bs-session-badge">{APP_ROLE_LABELS[session.role]}</span>
+                      {session.stateScope && <> — {STATE_NAME_LABELS[session.stateScope]}</>}
+                      {session.districtScope && <> / {session.districtScope}</>}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="bs-footer">
+        <div className="bs-shell bs-footer-inner">
+          <span className="bs-footer-wordmark">BhoomiSetu</span>
+          <span className="bs-footer-meta">{t(uiText.landing.footerTagline)}</span>
         </div>
+      </footer>
 
-        {needsState && (
-          <SelectField
-            label="State"
-            value={stateScope ?? ''}
-            onChange={(event) => handleStateChange(event.target.value)}
-          >
-            <option value="">Select a state…</option>
-            {stateOptions.map((state) => (
-              <option key={state} value={state}>
-                {STATE_NAME_LABELS[state]}
-              </option>
-            ))}
-          </SelectField>
-        )}
-
-        {needsDistrict && stateScope && (
-          <SelectField
-            label="District"
-            value={districtScope ?? ''}
-            onChange={(event) => setDistrictScope(event.target.value || undefined)}
-          >
-            <option value="">Select a district…</option>
-            {districtOptions.map((district) => (
-              <option key={district} value={district}>
-                {district}
-              </option>
-            ))}
-          </SelectField>
-        )}
-
-        {pendingRole && (
-          <Button type="button" disabled={!canSignIn} onClick={handleSignIn}>
-            Sign in as {APP_ROLE_LABELS[pendingRole]}
-          </Button>
-        )}
-
-        {session && (
-          <p>
-            Currently viewing as <Badge tone="info">{APP_ROLE_LABELS[session.role]}</Badge>
-            {session.stateScope && <> — {STATE_NAME_LABELS[session.stateScope]}</>}
-            {session.districtScope && <> / {session.districtScope}</>}
-          </p>
-        )}
-      </Card>
-
-      <div className="landing-grid">
-        <Card eyebrow="Foundation" title={t(uiText.landing.foundationTitle)}>
-          <p>{t(uiText.landing.foundationBody)}</p>
-        </Card>
-        <Card eyebrow="Next data path" title={t(uiText.landing.nextTitle)}>
-          <p>{t(uiText.landing.nextBody)}</p>
-        </Card>
-      </div>
-    </PageContainer>
+      <CapabilityModal
+        capability={
+          activeCapabilityIndex === null
+            ? null
+            : {
+                index: String(activeCapabilityIndex + 1).padStart(2, '0'),
+                title: t(uiText.landing[CAPABILITIES[activeCapabilityIndex].titleKey]),
+                detail: t(uiText.landing[CAPABILITIES[activeCapabilityIndex].detailKey]),
+              }
+        }
+        onClose={() => setActiveCapabilityIndex(null)}
+      />
+    </div>
   );
 }

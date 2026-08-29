@@ -3,10 +3,12 @@ import { NotificationCenter } from './NotificationCenter';
 import { useDataSaver } from '../i18n/DataSaverContext';
 import { useLanguage } from '../i18n/LanguageContext';
 import { uiText } from '../i18n/translations';
+import { useTheme } from '../theme/ThemeContext';
 
 export function AppShell() {
   const { language, t, toggleLanguage } = useLanguage();
   const { isDataSaverOn, toggleDataSaver } = useDataSaver();
+  const { theme, toggleTheme } = useTheme();
 
   const navLinks = [
     { to: '/', label: t(uiText.nav.home), end: true },
@@ -53,6 +55,15 @@ export function AppShell() {
           >
             <span aria-hidden="true">📶</span>{' '}
             {isDataSaverOn ? t(uiText.nav.dataSaverOnLabel) : t(uiText.nav.dataSaverOffLabel)}
+          </button>
+          <button
+            className="nav-link lang-toggle theme-toggle"
+            type="button"
+            onClick={toggleTheme}
+            aria-pressed={theme === 'dark'}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          >
+            <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
           </button>
           <NotificationCenter />
         </nav>

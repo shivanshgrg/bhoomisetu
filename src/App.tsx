@@ -22,8 +22,8 @@ const NATIONAL_ROLES: AppRole[] = ['national_admin', 'state_authority'];
 export default function App() {
   return (
     <Routes>
+      <Route index element={<LandingPage />} />
       <Route element={<AppShell />}>
-        <Route index element={<LandingPage />} />
         <Route
           path="official"
           element={

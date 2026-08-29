@@ -64,6 +64,116 @@ export const uiText = {
       en: 'Step 2 can plug parcel records, history, documents, and objection states into the existing cards, tables, filters, and forms.',
       hi: 'अगला चरण भूखंड रिकॉर्ड, इतिहास, दस्तावेज़ और आपत्ति स्थितियों को मौजूदा कार्ड, तालिकाओं, फ़िल्टर और फॉर्म में जोड़ सकता है।',
     } as TranslationEntry,
+    headlineMain: { en: 'One workspace for every stage of', hi: 'हर चरण के लिए एक साझा मंच' } as TranslationEntry,
+    headlineMuted: { en: 'land acquisition.', hi: 'भूमि अधिग्रहण का।' } as TranslationEntry,
+    heroCtaPrimary: { en: 'Sign in to continue', hi: 'साइन इन करके जारी रखें' } as TranslationEntry,
+    heroCtaSecondary: { en: 'Explore the portals', hi: 'पोर्टल देखें' } as TranslationEntry,
+    portalsEyebrow: { en: 'Role portals', hi: 'भूमिका पोर्टल' } as TranslationEntry,
+    portalsHeading: { en: 'Two portals, one shared record', hi: 'दो पोर्टल, एक साझा रिकॉर्ड' } as TranslationEntry,
+    portalsIntro: {
+      en: 'Officials and landowners work from the same parcel data, each through a view built for their role.',
+      hi: 'अधिकारी और भूमि मालिक एक ही भूखंड डेटा पर काम करते हैं, हर कोई अपनी भूमिका के अनुसार बने दृश्य से।',
+    } as TranslationEntry,
+    portalLinkLabel: { en: 'Enter portal', hi: 'पोर्टल में प्रवेश करें' } as TranslationEntry,
+    howItWorksEyebrow: { en: 'How it works', hi: 'यह कैसे काम करता है' } as TranslationEntry,
+    howItWorksHeading: { en: 'Seven stages, start to finish', hi: 'शुरुआत से अंत तक सात चरण' } as TranslationEntry,
+    howItWorksIntro: {
+      en: 'Every parcel moves through the same statutory sequence, with deadlines and required documents at each step.',
+      hi: 'हर भूखंड एक ही वैधानिक क्रम से गुजरता है, हर चरण में समय-सीमा और आवश्यक दस्तावेज़ों के साथ।',
+    } as TranslationEntry,
+    stepNotificationBody: {
+      en: 'The project area is notified under Section 11 and the acquisition clock starts.',
+      hi: 'परियोजना क्षेत्र को धारा 11 के तहत अधिसूचित किया जाता है और अधिग्रहण की समय-सीमा शुरू होती है।',
+    } as TranslationEntry,
+    stepSurveyBody: {
+      en: 'Officials and landowners jointly survey the parcel and confirm ownership records.',
+      hi: 'अधिकारी और भूमि मालिक मिलकर भूखंड का सर्वेक्षण करते हैं और स्वामित्व रिकॉर्ड की पुष्टि करते हैं।',
+    } as TranslationEntry,
+    stepObjectionBody: {
+      en: 'Landowners can raise objections, which are heard and recorded before the process continues.',
+      hi: 'भूमि मालिक आपत्तियाँ दर्ज कर सकते हैं, जिन्हें आगे बढ़ने से पहले सुना और दर्ज किया जाता है।',
+    } as TranslationEntry,
+    stepValuationBody: {
+      en: 'A valuation report sets the baseline for compensation on the parcel.',
+      hi: 'एक मूल्यांकन रिपोर्ट भूखंड के मुआवज़े का आधार तय करती है।',
+    } as TranslationEntry,
+    stepApprovalBody: {
+      en: 'The compensation statement is reviewed and approved by the competent authority.',
+      hi: 'सक्षम अधिकारी द्वारा मुआवज़ा विवरण की समीक्षा और अनुमोदन किया जाता है।',
+    } as TranslationEntry,
+    stepAwardBody: {
+      en: 'The award order is issued, fixing the final compensation for the parcel.',
+      hi: 'पुरस्कार आदेश जारी किया जाता है, जो भूखंड के अंतिम मुआवज़े को तय करता है।',
+    } as TranslationEntry,
+    stepPossessionBody: {
+      en: 'Possession is formally handed over and recorded, closing out the parcel.',
+      hi: 'कब्ज़ा औपचारिक रूप से सौंपा और दर्ज किया जाता है, जिससे भूखंड की प्रक्रिया पूरी होती है।',
+    } as TranslationEntry,
+    capabilitiesEyebrow: { en: 'Capabilities', hi: 'क्षमताएं' } as TranslationEntry,
+    capabilitiesHeading: { en: 'Built for how the work actually happens', hi: 'काम जैसे वास्तव में होता है, वैसे ही बनाया गया' } as TranslationEntry,
+    capabilitiesIntro: {
+      en: 'Beyond the workflow, the platform layers in the checks a real acquisition process needs.',
+      hi: 'कार्यप्रवाह के अलावा, यह मंच एक वास्तविक अधिग्रहण प्रक्रिया के लिए आवश्यक जाँचें भी जोड़ता है।',
+    } as TranslationEntry,
+    capabilityAccessTitle: { en: 'Role-based access', hi: 'भूमिका-आधारित पहुंच' } as TranslationEntry,
+    capabilityAccessBody: {
+      en: 'National, state, district, and field roles each see only the dashboards their remit covers.',
+      hi: 'राष्ट्रीय, राज्य, जिला और फील्ड भूमिकाएं केवल अपने दायरे से जुड़े डैशबोर्ड देखती हैं।',
+    } as TranslationEntry,
+    capabilityAccessDetail: {
+      en: 'National and state roles see the full rollup across every project; district and field roles are scoped to the state and district chosen at sign-in and only ever see parcels within that boundary. Landowners get a separate self-service portal — never the official dashboards.',
+      hi: 'राष्ट्रीय और राज्य भूमिकाएं हर परियोजना का पूरा सारांश देखती हैं; जिला और फील्ड भूमिकाएं साइन-इन पर चुने गए राज्य और जिले तक सीमित रहती हैं और केवल उसी सीमा के भूखंड देखती हैं। भूमि मालिकों को एक अलग स्व-सेवा पोर्टल मिलता है — कभी भी अधिकारी डैशबोर्ड नहीं।',
+    } as TranslationEntry,
+    capabilityVerificationTitle: { en: 'Document verification', hi: 'दस्तावेज़ सत्यापन' } as TranslationEntry,
+    capabilityVerificationBody: {
+      en: 'Required documents are checked against each stage before a parcel can move forward.',
+      hi: 'भूखंड को आगे बढ़ाने से पहले हर चरण के लिए आवश्यक दस्तावेज़ों की जाँच की जाती है।',
+    } as TranslationEntry,
+    capabilityVerificationDetail: {
+      en: 'Every stage — notification, survey, objection review, valuation, and on — carries its own required document list. A parcel missing any of them is blocked from advancing, and the gap shows up immediately in the missing-documents count on that parcel’s record.',
+      hi: 'हर चरण — अधिसूचना, सर्वेक्षण, आपत्ति समीक्षा, मूल्यांकन, और आगे — का अपना आवश्यक दस्तावेज़ों की सूची होती है। इनमें से किसी की कमी होने पर भूखंड आगे नहीं बढ़ पाता, और यह कमी उस भूखंड के रिकॉर्ड में लापता-दस्तावेज़ गिनती में तुरंत दिखती है।',
+    } as TranslationEntry,
+    capabilityRiskTitle: { en: 'Risk engine', hi: 'जोखिम इंजन' } as TranslationEntry,
+    capabilityRiskBody: {
+      en: 'Stuck parcels and approaching deadlines surface automatically for action.',
+      hi: 'अटके हुए भूखंड और नज़दीक आ रही समय-सीमाएं अपने आप सामने आती हैं।',
+    } as TranslationEntry,
+    capabilityRiskDetail: {
+      en: 'Every parcel gets a 0–100 score built from four factors — stage delay, missing documents, open objections, and deadline proximity — each contributing its own points. The Action Center ranks the whole queue by this score, so the parcels most likely to stall surface first.',
+      hi: 'हर भूखंड को चार कारकों से बना 0–100 स्कोर मिलता है — चरण विलंब, लापता दस्तावेज़, खुली आपत्तियाँ, और समय-सीमा निकटता — हर एक अपने अंक जोड़ता है। एक्शन सेंटर पूरी सूची को इस स्कोर के अनुसार क्रमबद्ध करता है, ताकि अटकने की सबसे अधिक संभावना वाले भूखंड सबसे पहले दिखें।',
+    } as TranslationEntry,
+    capabilityReportsTitle: { en: 'Reports', hi: 'रिपोर्ट' } as TranslationEntry,
+    capabilityReportsBody: {
+      en: 'Roll up parcel status across projects, states, and districts for review.',
+      hi: 'समीक्षा के लिए परियोजनाओं, राज्यों और जिलों में भूखंड की स्थिति का सारांश तैयार करें।',
+    } as TranslationEntry,
+    capabilityReportsDetail: {
+      en: 'A printable summary of parcel status, the top-risk parcels, and project progress for whatever scope is currently in view — one click away from a clean PDF for a meeting or a file, no spreadsheet exports needed.',
+      hi: 'वर्तमान दायरे के लिए भूखंड की स्थिति, सबसे अधिक जोखिम वाले भूखंडों, और परियोजना प्रगति का प्रिंट करने योग्य सारांश — एक क्लिक में बैठक या फ़ाइल के लिए साफ़ PDF, किसी स्प्रेडशीट एक्सपोर्ट की ज़रूरत नहीं।',
+    } as TranslationEntry,
+    capabilityAuditTitle: { en: 'Audit ledger', hi: 'लेखा परीक्षा लेजर' } as TranslationEntry,
+    capabilityAuditBody: {
+      en: 'A tamper-evident record of every status change, for accountability after the fact.',
+      hi: 'हर स्थिति परिवर्तन का छेड़छाड़-रोधी रिकॉर्ड, बाद में जवाबदेही के लिए।',
+    } as TranslationEntry,
+    capabilityAuditDetail: {
+      en: 'Each stage-history entry is chained by hash to the one before it, the way a blockchain ledger works. Alter any entry after the fact and the chain breaks visibly — the parcel record shows exactly which link stopped verifying.',
+      hi: 'हर चरण-इतिहास प्रविष्टि पिछली प्रविष्टि से हैश द्वारा जुड़ी होती है, ठीक उसी तरह जैसे ब्लॉकचेन लेजर काम करता है। बाद में किसी प्रविष्टि को बदलने पर चेन स्पष्ट रूप से टूट जाती है — भूखंड रिकॉर्ड में ठीक-ठीक दिखता है कि कौन सी कड़ी सत्यापित होना बंद हुई।',
+    } as TranslationEntry,
+    capabilityTimelineTitle: { en: 'Project timeline', hi: 'परियोजना समयरेखा' } as TranslationEntry,
+    capabilityTimelineBody: {
+      en: 'See how long a parcel spent in each stage, and where it is falling behind.',
+      hi: 'देखें कि भूखंड ने हर चरण में कितना समय बिताया और कहाँ पिछड़ रहा है।',
+    } as TranslationEntry,
+    capabilityTimelineDetail: {
+      en: 'A sanctioned-to-target span for every project, with today marked on the axis, sits alongside a per-stage duration chart that plots the average time spent against each stage’s SLA threshold — so a slow stage is visible at a glance, not buried in a table.',
+      hi: 'हर परियोजना के लिए स्वीकृति-से-लक्ष्य अवधि, अक्ष पर आज की तारीख के साथ, एक प्रति-चरण अवधि चार्ट के साथ दिखती है जो हर चरण की SLA सीमा के मुकाबले औसत समय दर्शाता है — ताकि धीमा चरण एक नज़र में दिखे, किसी तालिका में छिपा न रहे।',
+    } as TranslationEntry,
+    capabilityCloseLabel: { en: 'Close', hi: 'बंद करें' } as TranslationEntry,
+    footerTagline: {
+      en: 'Built for SIH26016 — a demonstration of end-to-end land acquisition workflow.',
+      hi: 'SIH26016 के लिए बनाया गया — भूमि अधिग्रहण कार्यप्रवाह का एक प्रदर्शन।',
+    } as TranslationEntry,
   },
   landownerSearch: {
     eyebrow: { en: 'Landowner services', hi: 'भूमि मालिक सेवाएँ' } as TranslationEntry,
