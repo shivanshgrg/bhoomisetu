@@ -43,6 +43,31 @@ export type VerifyDocumentInput = {
   rejectionReason?: string;
 };
 
+// Step 59: one validated CSV row, ready to commit. Deliberately narrower than
+// AcquisitionParcel — no id (assigned on import), no documents/objections
+// (a bulk parcel import seeds bare records; documents/objections are added
+// afterwards through the normal per-parcel flows).
+export type NewParcelInput = {
+  surveyNumber: string;
+  projectId: string;
+  owner: AcquisitionParcel['owner'];
+  village: string;
+  tehsil: string;
+  district: string;
+  areaHectares: number;
+  currentStage: StageId;
+  stageEnteredOn: ISODateString;
+  compensationEstimate: number;
+  compensationPaid: number;
+  coordinates: AcquisitionParcel['coordinates'];
+  handledByRole: OfficialRole;
+};
+
+export type ImportParcelsResult = {
+  imported: number;
+  parcels: AcquisitionParcel[];
+};
+
 /**
  * Typed data-access boundary. Both the demo (in-memory) and Supabase
  * implementations satisfy this interface so pages never branch on which
@@ -59,4 +84,5 @@ export interface ParcelRepository {
   updateObjectionStatus(input: UpdateObjectionStatusInput): Promise<ParcelObjection>;
   listProjects(): Promise<AcquisitionProject[]>;
   getProjectById(projectId: string): Promise<AcquisitionProject | undefined>;
+  importParcels(inputs: NewParcelInput[]): Promise<ImportParcelsResult>;
 }

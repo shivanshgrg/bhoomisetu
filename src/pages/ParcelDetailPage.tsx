@@ -9,20 +9,28 @@ import {
   FileField,
   PageContainer,
   PageHeader,
+  Pagination,
   SelectField,
   TextField,
 } from '../components/ui';
 import { AuditChainLedger } from '../components/AuditChainLedger';
 import { SmsPreviewPanel } from '../components/SmsPreviewPanel';
 import { repository } from '../data';
+import { analyzeImageFile } from '../data/imageAnalysis';
+import { runOcr } from '../data/ocr';
+import { extractPdfText } from '../data/pdfText';
 import { uploadDocumentFile } from '../data/upload';
+import { usePagination } from '../hooks/usePagination';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useOffline } from '../i18n/OfflineContext';
 import { useSession } from '../i18n/SessionContext';
 import {
   dashboardStatusLabels,
   documentCheckVerdictLabels,
   documentKindLabels,
   documentStatusLabels,
+  escalationLevelLabels,
+  lapseRiskLabels,
   objectionReasonLabels,
   objectionStatusLabels,
   officialRoleLabels,
@@ -34,11 +42,14 @@ import {
 import {
   ACQUISITION_STAGES,
   DEMO_REFERENCE_DATE,
+  OBJECTION_REASON_STATUTES,
   OBJECTION_STATUSES,
   OFFICIAL_ROLES,
   STAGE_HANDLER_ROLE,
   getAdvanceGate,
   getDocumentsForStage,
+  getEscalationStatus,
+  getLapseStatus,
   getParcelCalculatedStatus,
   getParcelRiskAssessment,
   getStageDefinition,
@@ -46,7 +57,9 @@ import {
   runDocumentQualityCheck,
   type AcquisitionParcel,
   type AcquisitionProject,
+  type DocumentCheckInput,
   type DocumentCheckResult,
+  type DocumentCheckSignal,
   type DocumentKind,
   type ObjectionStatus,
   type OfficialRole,
@@ -56,14 +69,24 @@ import {
   getAdvanceGateReasonText,
   getBadgeTone,
   getDocumentStatusTone,
+  getEscalationTone,
+  getLapseMonthsElapsed,
+  getLapseRiskIcon,
+  getLapseRiskTone,
+  getPaginationPageLabel,
+  getPaginationSummary,
   getRiskTone,
+  getSignalTone,
   getStatusIcon,
 } from './statusDisplay';
+
+const DOCUMENTS_PAGE_SIZE = 5;
 
 export function ParcelDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { session } = useSession();
   const { t } = useLanguage();
+  const { pendingCountForParcel } = useOffline();
 
   const [parcel, setParcel] = useState<AcquisitionParcel | undefined>(undefined);
   const [project, setProject] = useState<AcquisitionProject | undefined>(undefined);
@@ -86,6 +109,11 @@ export function ParcelDetailPage() {
   const [uploadError, setUploadError] = useState<string | undefined>(undefined);
   const [uploadMessage, setUploadMessage] = useState<string | undefined>(undefined);
   const [lastCheckResult, setLastCheckResult] = useState<DocumentCheckResult | undefined>(undefined);
+  const [lastCheckInput, setLastCheckInput] = useState<DocumentCheckInput | undefined>(undefined);
+  const [lastUploadedFile, setLastUploadedFile] = useState<File | undefined>(undefined);
+  const [isReadingScan, setIsReadingScan] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [scanError, setScanError] = useState<string | undefined>(undefined);
 
   const [updatingObjectionId, setUpdatingObjectionId] = useState<string | undefined>(undefined);
   const [objectionStatusError, setObjectionStatusError] = useState<string | undefined>(undefined);
@@ -149,10 +177,13 @@ export function ParcelDetailPage() {
 
   const calculatedStatus = useMemo(() => (parcel ? getParcelCalculatedStatus(parcel) : undefined), [parcel]);
   const advanceGate = useMemo(() => (parcel ? getAdvanceGate(parcel) : undefined), [parcel]);
+  const documentsPagination = usePagination(parcel?.documents ?? [], DOCUMENTS_PAGE_SIZE, parcel?.id);
   const riskAssessment = useMemo(
     () => (parcel && project ? getParcelRiskAssessment(parcel, project) : undefined),
     [parcel, project],
   );
+  const escalationStatus = useMemo(() => (parcel ? getEscalationStatus(parcel) : undefined), [parcel]);
+  const lapseStatus = useMemo(() => (parcel ? getLapseStatus(parcel) : undefined), [parcel]);
 
   async function handleAdvance() {
     if (!parcel || !advanceGate?.canAdvance) {
@@ -281,14 +312,47 @@ export function ParcelDetailPage() {
     setUploadError(undefined);
     setUploadMessage(undefined);
     setLastCheckResult(undefined);
+    setLastCheckInput(undefined);
+    setLastUploadedFile(undefined);
+    setScanError(undefined);
 
     try {
       const { url, fileType } = await uploadDocumentFile(parcel.id, uploadStage, uploadFile);
-      const checkResult = runDocumentQualityCheck({
+
+      let pdfExtraction: Awaited<ReturnType<typeof extractPdfText>> | undefined;
+      if (fileType === 'pdf') {
+        try {
+          pdfExtraction = await extractPdfText(uploadFile);
+        } catch {
+          pdfExtraction = { pageCount: 0, hasTextLayer: false, text: '' };
+        }
+      }
+
+      let imageAnalysis: Awaited<ReturnType<typeof analyzeImageFile>> | undefined;
+      if (fileType === 'image') {
+        try {
+          imageAnalysis = await analyzeImageFile(uploadFile);
+        } catch {
+          imageAnalysis = undefined;
+        }
+      }
+
+      const checkInput: DocumentCheckInput = {
         name: uploadFile.name,
         size: uploadFile.size,
         type: fileType,
-      });
+        content: {
+          documentKind: uploadKind,
+          surveyNumber: parcel.surveyNumber,
+          referenceDate: DEMO_REFERENCE_DATE,
+          projectSanctionedOn: project?.sanctionedOn,
+          pdfExtraction,
+          imageAnalysis,
+        },
+      };
+      const checkResult = runDocumentQualityCheck(checkInput);
+      setLastCheckInput(checkInput);
+      setLastUploadedFile(uploadFile);
       await repository.addDocument({
         parcelId: parcel.id,
         stage: uploadStage,
@@ -316,6 +380,32 @@ export function ParcelDetailPage() {
       setUploadError(error instanceof Error ? error.message : t(uiText.parcelDetail.uploadErrorFallback));
     } finally {
       setIsUploading(false);
+    }
+  }
+
+  async function handleReadScan() {
+    if (!lastUploadedFile || !lastCheckInput) {
+      return;
+    }
+
+    setIsReadingScan(true);
+    setScanProgress(0);
+    setScanError(undefined);
+
+    try {
+      const { text, confidence } = await runOcr(lastUploadedFile, setScanProgress);
+      const updatedInput: DocumentCheckInput = {
+        ...lastCheckInput,
+        content: lastCheckInput.content
+          ? { ...lastCheckInput.content, ocrText: text, ocrConfidence: confidence }
+          : undefined,
+      };
+      setLastCheckInput(updatedInput);
+      setLastCheckResult(runDocumentQualityCheck(updatedInput));
+    } catch {
+      setScanError(t(uiText.parcelDetail.ocrErrorMessage));
+    } finally {
+      setIsReadingScan(false);
     }
   }
 
@@ -354,7 +444,7 @@ export function ParcelDetailPage() {
   const currentStageOrder = getStageDefinition(parcel.currentStage).order;
   const documentsForStage = getDocumentsForStage(parcel);
 
-  const documentRows = parcel.documents.map((document) => [
+  const documentRows = documentsPagination.pageItems.map((document) => [
     t(stageShortLabels[document.stage]),
     t(documentKindLabels[document.kind]),
     document.title,
@@ -382,7 +472,7 @@ export function ParcelDetailPage() {
       '—'
     ),
     rejectingDocumentId === document.id ? (
-      <div className="filter-grid" key={`${document.id}-reject-form`}>
+      <div className="row-inline-form" key={`${document.id}-reject-form`}>
         <TextField
           label={t(uiText.parcelDetail.rejectionReasonLabel)}
           value={rejectReason}
@@ -400,7 +490,7 @@ export function ParcelDetailPage() {
         </Button>
       </div>
     ) : (
-      <div key={`${document.id}-actions`} className="filter-grid">
+      <div key={`${document.id}-actions`} className="row-actions">
         <Button
           type="button"
           disabled={verifyingDocumentId === document.id}
@@ -425,6 +515,7 @@ export function ParcelDetailPage() {
     objection.submittedOn,
     objection.submittedBy,
     t(objectionReasonLabels[objection.reason]),
+    OBJECTION_REASON_STATUTES[objection.reason],
     objection.description,
     <Badge
       key={`${objection.id}-status`}
@@ -456,6 +547,22 @@ export function ParcelDetailPage() {
   const currentStageLabel = t(stageLabels[parcel.currentStage]);
   const dashboardStatusLabel = t(dashboardStatusLabels[calculatedStatus.status]);
 
+  const lapseKillShotText =
+    lapseStatus && lapseStatus.risk !== 'safe'
+      ? t(
+          lapseStatus.risk === 'lapsed'
+            ? uiText.lapseClock.lapsedKillShotTemplate
+            : uiText.lapseClock.approachingKillShotTemplate,
+        )
+          .replace('{amount}', parcel.compensationEstimate.toLocaleString('en-IN'))
+          .replace('{months}', String(getLapseMonthsElapsed(lapseStatus)))
+          .replace('{days}', String(Math.abs(lapseStatus.daysRemaining)))
+          .replace(
+            '{statute}',
+            t(lapseStatus.statute === 'section_24' ? uiText.lapseClock.statuteSection24 : uiText.lapseClock.statuteSection19),
+          )
+      : undefined;
+
   return (
     <PageContainer>
       <PageHeader
@@ -463,13 +570,44 @@ export function ParcelDetailPage() {
         title={`Survey ${parcel.surveyNumber}`}
         description={`${parcel.owner.name} · ${parcel.village}, ${parcel.tehsil}`}
         actions={
-          <Link to="/official">
-            <Button type="button" variant="secondary">
-              {t(uiText.parcelDetail.backToDashboard)}
-            </Button>
-          </Link>
+          <div className="page-actions-group">
+            <Link to={`/official/parcel/${parcel.id}/notice`}>
+              <Button type="button" variant="secondary">
+                {t(uiText.parcelDetail.generateNoticeButton)}
+              </Button>
+            </Link>
+            <Link to={`/official/parcel/${parcel.id}/audit-export`}>
+              <Button type="button" variant="secondary">
+                {t(uiText.parcelDetail.exportAuditBundleButton)}
+              </Button>
+            </Link>
+            <Link to="/official">
+              <Button type="button" variant="secondary">
+                {t(uiText.parcelDetail.backToDashboard)}
+              </Button>
+            </Link>
+          </div>
         }
       />
+
+      {pendingCountForParcel(parcel.id) > 0 && (
+        <Badge tone="warning">
+          {pendingCountForParcel(parcel.id)} {t(uiText.offline.pendingBadgePrefix)} — {t(uiText.offline.parcelPendingNote)}
+        </Badge>
+      )}
+
+      {lapseStatus && lapseStatus.risk !== 'safe' && (
+        <div className={`lapse-banner lapse-banner-${lapseStatus.risk}`} role="alert">
+          <span className="lapse-banner-title">
+            <span aria-hidden="true">{getLapseRiskIcon(lapseStatus.risk)}</span> {t(uiText.lapseClock.cardTitle)}:{' '}
+            {t(lapseRiskLabels[lapseStatus.risk])}
+          </span>
+          <span>{lapseKillShotText}</span>
+          <span className="lapse-banner-note">
+            {t(uiText.lapseClock.deadlineLabel)}: {lapseStatus.deadlineOn} — {t(uiText.lapseClock.disclaimerNote)}
+          </span>
+        </div>
+      )}
 
       <section className="landowner-grid">
         <Card eyebrow={t(uiText.parcelDetail.overviewEyebrow)} title={t(uiText.parcelDetail.overviewTitle)}>
@@ -539,6 +677,22 @@ export function ParcelDetailPage() {
             ))}
           </div>
           <p>{riskAssessment.recommendedAction}</p>
+        </Card>
+      )}
+
+      {escalationStatus && (
+        <Card eyebrow={t(uiText.escalation.parcelEyebrow)} title={t(uiText.escalation.parcelTitle)}>
+          <div className="status-list">
+            <span>{t(uiText.escalation.levelLabel)}</span>
+            <Badge tone={getEscalationTone(escalationStatus.level)}>
+              {t(escalationLevelLabels[escalationStatus.level])}
+            </Badge>
+            <span>{t(uiText.escalation.daysPastSlaLabel)}</span>
+            <strong>
+              {escalationStatus.daysPastSla > 0 ? escalationStatus.daysPastSla : t(uiText.escalation.daysPastSlaNone)}
+            </strong>
+          </div>
+          <p>{t(uiText.escalation.explainer)}</p>
         </Card>
       )}
 
@@ -693,20 +847,42 @@ export function ParcelDetailPage() {
         </form>
         {uploadMessage && <p>{uploadMessage}</p>}
         {lastCheckResult && (
-          <p>
-            <Badge
-              tone={
-                lastCheckResult.verdict === 'looks_complete'
-                  ? 'success'
-                  : lastCheckResult.verdict === 'needs_review'
-                    ? 'warning'
-                    : 'danger'
-              }
-            >
-              {t(uiText.parcelDetail.aiCheckPrefix)} {t(documentCheckVerdictLabels[lastCheckResult.verdict])}
-            </Badge>{' '}
-            {lastCheckResult.reasons.join(' ')}
-          </p>
+          <div className="document-check-result">
+            <p>
+              <Badge
+                tone={
+                  lastCheckResult.verdict === 'looks_complete'
+                    ? 'success'
+                    : lastCheckResult.verdict === 'needs_review'
+                      ? 'warning'
+                      : 'danger'
+                }
+              >
+                {t(uiText.parcelDetail.aiCheckPrefix)} {t(documentCheckVerdictLabels[lastCheckResult.verdict])}
+              </Badge>
+            </p>
+            <p className="eyebrow">{t(uiText.parcelDetail.signalBreakdownLabel)}</p>
+            <ul className="signal-list">
+              {lastCheckResult.signals.map((signal: DocumentCheckSignal) => (
+                <li key={signal.id}>
+                  <Badge tone={getSignalTone(signal.status)}>{signal.label}</Badge>
+                  <span>{signal.detail}</span>
+                </li>
+              ))}
+            </ul>
+            {lastCheckResult.signals.some((signal) => signal.id === 'text_presence' && signal.status === 'warning') && (
+              <p>
+                <Button type="button" variant="secondary" disabled={isReadingScan} onClick={() => void handleReadScan()}>
+                  {isReadingScan
+                    ? `${t(uiText.parcelDetail.ocrRunningButton)} ${scanProgress}%`
+                    : t(uiText.parcelDetail.ocrButton)}
+                </Button>
+                <br />
+                <small>{t(uiText.parcelDetail.ocrNetworkNote)}</small>
+              </p>
+            )}
+            {scanError && <p>{scanError}</p>}
+          </div>
         )}
         {uploadError && <p>{uploadError}</p>}
       </Card>
@@ -716,21 +892,33 @@ export function ParcelDetailPage() {
         title={t(uiText.parcelDetail.documentsTitle)}
       >
         {documentRows.length > 0 ? (
-          <DataTable
-            caption={t(uiText.parcelDetail.documentsCaption)}
-            columns={[
-              t(uiText.parcelDetail.colStage),
-              t(uiText.parcelDetail.colDocument),
-              t(uiText.parcelDetail.titleFieldLabel),
-              t(uiText.parcelDetail.colUploaded),
-              t(uiText.parcelDetail.colBy),
-              t(uiText.parcelDetail.colType),
-              t(uiText.parcelDetail.statusLabel),
-              t(uiText.parcelDetail.colQualityCheck),
-              t(uiText.parcelDetail.colVerifyReject),
-            ]}
-            rows={documentRows}
-          />
+          <>
+            <DataTable
+              caption={t(uiText.parcelDetail.documentsCaption)}
+              tableClassName="table-wide"
+              columns={[
+                t(uiText.parcelDetail.colStage),
+                t(uiText.parcelDetail.colDocument),
+                t(uiText.parcelDetail.titleFieldLabel),
+                t(uiText.parcelDetail.colUploaded),
+                t(uiText.parcelDetail.colBy),
+                t(uiText.parcelDetail.colType),
+                t(uiText.parcelDetail.statusLabel),
+                t(uiText.parcelDetail.colQualityCheck),
+                t(uiText.parcelDetail.colVerifyReject),
+              ]}
+              rows={documentRows}
+            />
+            <Pagination
+              page={documentsPagination.page}
+              pageCount={documentsPagination.pageCount}
+              onPageChange={documentsPagination.setPage}
+              summary={getPaginationSummary(parcel.documents.length, documentsPagination.page, DOCUMENTS_PAGE_SIZE, t)}
+              pageLabel={getPaginationPageLabel(documentsPagination.page, documentsPagination.pageCount, t)}
+              previousLabel={t(uiText.pagination.previous)}
+              nextLabel={t(uiText.pagination.next)}
+            />
+          </>
         ) : (
           <EmptyState
             title={t(uiText.parcelDetail.noDocumentsUploadedTitle)}
@@ -752,6 +940,7 @@ export function ParcelDetailPage() {
               t(uiText.parcelDetail.colSubmitted),
               t(uiText.parcelDetail.colBy),
               t(uiText.parcelDetail.colReason),
+              t(uiText.parcelDetail.colStatute),
               t(uiText.parcelDetail.colDescription),
               t(uiText.parcelDetail.statusLabel),
               t(uiText.parcelDetail.colUpdateStatus),

@@ -1,6 +1,7 @@
 import { motion, useScroll, useSpring } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { LanguagePicker } from '../LanguagePicker';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { uiText } from '../../i18n/translations';
 import { useTheme } from '../../theme/ThemeContext';
 
 const SECTION_LINKS = [
@@ -10,7 +11,7 @@ const SECTION_LINKS = [
 ];
 
 export function LandingNav() {
-  const { language, t, toggleLanguage } = useLanguage();
+  const { language } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 220, damping: 40, restDelta: 0.001 });
@@ -24,19 +25,12 @@ export function LandingNav() {
         <nav className="bs-nav-links" aria-label="Section navigation">
           {SECTION_LINKS.map((link) => (
             <a key={link.href} className="bs-nav-link" href={link.href}>
-              {link.label[language]}
+              {language === 'hi' ? link.label.hi : link.label.en}
             </a>
           ))}
         </nav>
         <div className="bs-nav-actions">
-          <button
-            type="button"
-            className="bs-nav-icon-btn"
-            onClick={toggleLanguage}
-            aria-label={language === 'en' ? 'हिंदी में बदलें' : 'Switch to English'}
-          >
-            {t(uiText.nav.languageToggleLabel)}
-          </button>
+          <LanguagePicker triggerClassName="bs-nav-icon-btn" />
           <button
             type="button"
             className="bs-nav-icon-btn"
@@ -46,12 +40,12 @@ export function LandingNav() {
           >
             {theme === 'dark' ? '☀' : '☾'}
           </button>
-          <a className="bs-btn bs-btn-amber bs-nav-cta" href="#sign-in">
-            <span>{language === 'en' ? 'Sign in' : 'साइन इन'}</span>
+          <Link className="bs-btn bs-btn-amber bs-nav-cta" to="/auth">
+            <span>{language === 'hi' ? 'साइन इन' : 'Sign in'}</span>
             <span className="bs-btn-arrow" aria-hidden="true">
               ↗
             </span>
-          </a>
+          </Link>
         </div>
       </div>
       <motion.div className="bs-nav-progress" style={{ scaleX: progress }} aria-hidden="true" />

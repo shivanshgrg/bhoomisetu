@@ -9,7 +9,9 @@ import {
   ACQUISITION_STAGES,
   STATE_NAME_LABELS,
   getActionCenterQueue,
+  getAllProjectForecasts,
   getDashboardSummary,
+  getDistrictBottleneckRanking,
   getNationalSummary,
   getStageDurationStats,
   scopeParcelsToSession,
@@ -74,6 +76,11 @@ export function ReportsPage() {
   );
   const stageDurationStats = useMemo(() => getStageDurationStats(scopedParcels), [scopedParcels]);
   const hasStageDurationData = stageDurationStats.some((stat) => stat.sampleSize > 0);
+  const projectForecasts = useMemo(
+    () => getAllProjectForecasts(scopedProjects, scopedParcels),
+    [scopedProjects, scopedParcels],
+  );
+  const districtBottlenecks = useMemo(() => getDistrictBottleneckRanking(scopedParcels), [scopedParcels]);
 
   const summaryRows = [
     [t(uiText.reports.totalParcelsLabel), dashboardSummary.total],
@@ -176,6 +183,68 @@ export function ReportsPage() {
                 title={t(uiText.stageDurationChart.noDataTitle)}
                 description={t(uiText.stageDurationChart.noDataDescription)}
               />
+            )}
+          </Card>
+
+          <Card eyebrow={t(uiText.forecast.eyebrow)} title={t(uiText.forecast.title)}>
+            {projectForecasts.length > 0 ? (
+              <>
+                <p>{t(uiText.forecast.caption)}</p>
+                <DataTable
+                  caption={t(uiText.forecast.title)}
+                  columns={[
+                    t(uiText.forecast.colProject),
+                    t(uiText.forecast.colTarget),
+                    t(uiText.forecast.colProjected),
+                    t(uiText.forecast.colGap),
+                    t(uiText.forecast.colBottleneck),
+                    t(uiText.forecast.colWhatIf),
+                  ]}
+                  rows={projectForecasts.map((forecast) => [
+                    forecast.projectName,
+                    forecast.targetCompletionOn,
+                    forecast.projectedCompletionOn,
+                    forecast.gapWeeks === 0
+                      ? t(uiText.forecast.onTargetLabel)
+                      : forecast.gapWeeks > 0
+                        ? `+${forecast.gapWeeks} ${t(uiText.forecast.weeksLateSuffix)}`
+                        : `${Math.abs(forecast.gapWeeks)} ${t(uiText.forecast.weeksAheadSuffix)}`,
+                    forecast.bottleneckStage ? t(stageLabels[forecast.bottleneckStage]) : t(uiText.forecast.noBottleneck),
+                    forecast.whatIfWeeksSaved > 0
+                      ? `${forecast.whatIfWeeksSaved} ${t(uiText.forecast.weeksSaved)}`
+                      : t(uiText.forecast.onTargetLabel),
+                  ])}
+                />
+              </>
+            ) : (
+              <EmptyState title={t(uiText.forecast.noDataTitle)} description={t(uiText.forecast.noDataDescription)} />
+            )}
+          </Card>
+
+          <Card eyebrow={t(uiText.forecast.bottleneckEyebrow)} title={t(uiText.forecast.bottleneckTitle)}>
+            {districtBottlenecks.length > 0 ? (
+              <>
+                <p>{t(uiText.forecast.bottleneckCaption)}</p>
+                <DataTable
+                  caption={t(uiText.forecast.bottleneckTitle)}
+                  columns={[
+                    t(uiText.forecast.colDistrict),
+                    t(uiText.forecast.colStage),
+                    t(uiText.forecast.colAverage),
+                    t(uiText.forecast.colSla),
+                    t(uiText.forecast.colOverage),
+                  ]}
+                  rows={districtBottlenecks.map((ranking) => [
+                    ranking.groupLabel,
+                    t(stageLabels[ranking.stage]),
+                    ranking.averageDays,
+                    ranking.thresholdDays,
+                    `+${ranking.overageDays}`,
+                  ])}
+                />
+              </>
+            ) : (
+              <EmptyState title={t(uiText.forecast.noDataTitle)} description={t(uiText.forecast.noDataDescription)} />
             )}
           </Card>
 

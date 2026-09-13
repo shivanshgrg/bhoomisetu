@@ -7,7 +7,7 @@ type SpeakButtonProps = {
   text: string;
 };
 
-function pickVoice(voices: SpeechSynthesisVoice[], languageTag: 'hi' | 'en') {
+function pickVoice(voices: SpeechSynthesisVoice[], languageTag: string) {
   const preferredPrefix = languageTag === 'hi' ? 'hi' : 'en';
   return (
     voices.find((voice) => voice.lang.toLowerCase().startsWith(preferredPrefix)) ??

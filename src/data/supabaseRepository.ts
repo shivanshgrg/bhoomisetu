@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { computeNextHash, GENESIS_HASH } from '../domain';
 import type {
   AcquisitionParcel,
   AcquisitionProject,
@@ -19,6 +20,7 @@ import type {
   AddDocumentInput,
   AddObjectionInput,
   AdvanceStageInput,
+  NewParcelInput,
   ParcelRepository,
   UpdateObjectionStatusInput,
   VerifyDocumentInput,
@@ -38,6 +40,7 @@ type ParcelRow = {
   area_hectares: number;
   current_stage: StageId;
   stage_entered_on: string;
+  declaration_on: string;
   compensation_estimate: number;
   compensation_paid: number;
   latitude: number;
@@ -71,6 +74,8 @@ type StageHistoryRow = {
   exited_on: string | null;
   handled_by_role: OfficialRole;
   note: string;
+  prev_hash?: string | null;
+  entry_hash?: string | null;
 };
 
 type DocumentRow = {
@@ -172,6 +177,7 @@ function mapParcelRow(row: ParcelRow): AcquisitionParcel {
     areaHectares: row.area_hectares,
     currentStage: row.current_stage,
     stageEnteredOn: row.stage_entered_on as ISODateString,
+    declarationOn: row.declaration_on as ISODateString,
     compensationEstimate: row.compensation_estimate,
     compensationPaid: row.compensation_paid,
     coordinates: { lat: row.latitude, lng: row.longitude },
@@ -243,6 +249,24 @@ export const supabaseRepository: ParcelRepository = {
   async advanceParcelStage({ parcelId, toStage, handledByRole, note, enteredOn }: AdvanceStageInput) {
     const client = requireClient();
 
+    // Step 50: persist the tamper-evident hash chain (src/domain/auditChain.ts)
+    // instead of only ever computing it client-side at load time. The row
+    // this parcel's chain currently ends on (exited_on is null, about to be
+    // closed below) holds the chain's current head hash; a parcel with no
+    // history yet chains from the genesis constant.
+    const { data: currentHeadRow, error: headError } = await client
+      .from('stage_history')
+      .select('entry_hash')
+      .eq('parcel_id', parcelId)
+      .is('exited_on', null)
+      .maybeSingle<{ entry_hash: string | null }>();
+
+    if (headError) {
+      throw headError;
+    }
+
+    const previousHash = currentHeadRow?.entry_hash ?? GENESIS_HASH;
+
     // Not run inside a database transaction: supabase-js issues plain REST
     // calls, and this prototype has no RPC/edge function defined. Acceptable
     // for a single-operator demo; a production version should wrap this in
@@ -257,13 +281,26 @@ export const supabaseRepository: ParcelRepository = {
       throw closeHistoryError;
     }
 
+    const newHistoryId = `${parcelId}-history-${toStage}`;
+    const entryHash = await computeNextHash(previousHash, {
+      id: newHistoryId,
+      parcelId,
+      stage: toStage,
+      enteredOn,
+      exitedOn: undefined,
+      handledByRole,
+      note,
+    });
+
     const { error: insertHistoryError } = await client.from('stage_history').insert({
-      id: `${parcelId}-history-${toStage}`,
+      id: newHistoryId,
       parcel_id: parcelId,
       stage: toStage,
       entered_on: enteredOn,
       handled_by_role: handledByRole,
       note,
+      prev_hash: previousHash,
+      entry_hash: entryHash,
     });
 
     if (insertHistoryError) {
@@ -397,5 +434,91 @@ export const supabaseRepository: ParcelRepository = {
     }
 
     return data ? mapProjectRow(data) : undefined;
+  },
+
+  // Step 59: batch-inserts validated rows plus one seed stage_history row
+  // each, chaining that row's hash from the genesis constant exactly like
+  // advanceParcelStage does for a normal stage transition (Step 50) — a
+  // bulk-imported parcel's audit chain is a real, verifiable chain from day
+  // one, not a synthetic exemption. Not wrapped in a DB transaction, same
+  // documented limitation as advanceParcelStage above.
+  async importParcels(inputs: NewParcelInput[]) {
+    const client = requireClient();
+    if (inputs.length === 0) {
+      return { imported: 0, parcels: [] };
+    }
+
+    const parcelRows = await Promise.all(
+      inputs.map(async (input, index) => {
+        const parcelId = `import-${input.surveyNumber.replace(/[^a-zA-Z0-9]+/g, '-')}-${Date.now()}-${index}`;
+        const historyId = `${parcelId}-history-${input.currentStage}`;
+        const entryHash = await computeNextHash(GENESIS_HASH, {
+          id: historyId,
+          parcelId,
+          stage: input.currentStage,
+          enteredOn: input.stageEnteredOn,
+          exitedOn: undefined,
+          handledByRole: input.handledByRole,
+          note: 'Seeded via bulk CSV import.',
+        });
+
+        return {
+          parcelId,
+          historyId,
+          entryHash,
+          parcelRow: {
+            id: parcelId,
+            project_id: input.projectId,
+            survey_number: input.surveyNumber,
+            owner_name: input.owner.name,
+            owner_phone: input.owner.phone,
+            owner_preferred_language: input.owner.preferredLanguage,
+            village: input.village,
+            tehsil: input.tehsil,
+            district: input.district,
+            area_hectares: input.areaHectares,
+            current_stage: input.currentStage,
+            stage_entered_on: input.stageEnteredOn,
+            // Bulk import has no recorded Section 19 declaration event —
+            // stageEnteredOn is the best available date, same simplification
+            // demoData.ts/demoRepository.ts document.
+            declaration_on: input.stageEnteredOn,
+            compensation_estimate: input.compensationEstimate,
+            compensation_paid: input.compensationPaid,
+            latitude: input.coordinates.lat,
+            longitude: input.coordinates.lng,
+          },
+          historyRow: {
+            id: historyId,
+            parcel_id: parcelId,
+            stage: input.currentStage,
+            entered_on: input.stageEnteredOn,
+            handled_by_role: input.handledByRole,
+            note: 'Seeded via bulk CSV import.',
+            prev_hash: GENESIS_HASH,
+            entry_hash: entryHash,
+          },
+        };
+      }),
+    );
+
+    const { error: parcelsError } = await client.from('parcels').insert(parcelRows.map((row) => row.parcelRow));
+    if (parcelsError) {
+      throw parcelsError;
+    }
+
+    const { error: historyError } = await client.from('stage_history').insert(parcelRows.map((row) => row.historyRow));
+    if (historyError) {
+      throw historyError;
+    }
+
+    const imported = await Promise.all(
+      parcelRows.map((row) => fetchParcel({ column: 'id', value: row.parcelId })),
+    );
+
+    return {
+      imported: imported.filter((parcel): parcel is AcquisitionParcel => !!parcel).length,
+      parcels: imported.filter((parcel): parcel is AcquisitionParcel => !!parcel),
+    };
   },
 };

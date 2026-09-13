@@ -23,7 +23,7 @@ export type GeoPoint = {
 export type ParcelOwner = {
   name: string;
   phone: string;
-  preferredLanguage: 'en' | 'hi' | 'mr';
+  preferredLanguage: 'en' | 'hi' | 'mr' | 'bn' | 'te' | 'ta' | 'gu' | 'kn' | 'or' | 'pa';
 };
 
 export type StageHistoryEntry = {
@@ -76,6 +76,12 @@ export type AcquisitionParcel = {
   areaHectares: number;
   currentStage: StageId;
   stageEnteredOn: ISODateString;
+  // Step 63: the Section 19 declaration date used by the statutory lapse
+  // clock (src/domain/lapse.ts). In the demo dataset this is derived from
+  // this parcel's 'notification' stage history entry — in reality the
+  // Section 19 declaration can postdate the Section 11 notification; this
+  // prototype treats them as the same event (see demoData.ts).
+  declarationOn: ISODateString;
   compensationEstimate: number;
   compensationPaid: number;
   coordinates: GeoPoint;

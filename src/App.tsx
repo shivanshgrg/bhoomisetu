@@ -4,10 +4,15 @@ import { OfficialShell } from './components/OfficialShell';
 import { RequireRole } from './components/RequireRole';
 import { AccessRestrictedPage } from './pages/AccessRestrictedPage';
 import { ActionCenterPage } from './pages/ActionCenterPage';
+import { AuditExportPage } from './pages/AuditExportPage';
+import { AuthPage } from './pages/AuthPage';
+import { BulkImportPage } from './pages/BulkImportPage';
 import { LandingPage } from './pages/LandingPage';
 import { LandownerPage } from './pages/LandownerPage';
 import { LandownerStatusPage } from './pages/LandownerStatusPage';
 import { NationalDashboardPage } from './pages/NationalDashboardPage';
+import { NoticeGeneratorPage } from './pages/NoticeGeneratorPage';
+import { ObjectionFilingPage } from './pages/ObjectionFilingPage';
 import { OfficialPage } from './pages/OfficialPage';
 import { ParcelDetailPage } from './pages/ParcelDetailPage';
 import { ReportsPage } from './pages/ReportsPage';
@@ -18,11 +23,13 @@ import type { AppRole } from './domain';
 // restricted below to the two roles that see the unscoped national rollup.
 const OFFICIAL_ROLES: AppRole[] = ['national_admin', 'state_authority', 'district_officer', 'field_officer'];
 const NATIONAL_ROLES: AppRole[] = ['national_admin', 'state_authority'];
+const LANDOWNER_ROLES: AppRole[] = ['landowner'];
 
 export default function App() {
   return (
     <Routes>
       <Route index element={<LandingPage />} />
+      <Route path="auth" element={<AuthPage />} />
       <Route element={<AppShell />}>
         <Route
           path="official"
@@ -42,8 +49,11 @@ export default function App() {
             }
           />
           <Route path="parcel/:id" element={<ParcelDetailPage />} />
+          <Route path="parcel/:id/notice" element={<NoticeGeneratorPage />} />
+          <Route path="parcel/:id/audit-export" element={<AuditExportPage />} />
           <Route path="action-center" element={<ActionCenterPage />} />
           <Route path="reports" element={<ReportsPage />} />
+          <Route path="bulk-import" element={<BulkImportPage />} />
           <Route path="*" element={<OfficialPage />} />
         </Route>
         <Route
@@ -54,9 +64,38 @@ export default function App() {
             </OfficialShell>
           }
         />
-        <Route path="landowner" element={<LandownerPage />} />
-        <Route path="landowner/status/:id" element={<LandownerStatusPage />} />
-        <Route path="landowner/*" element={<LandownerPage />} />
+        <Route
+          path="landowner"
+          element={
+            <RequireRole allowedRoles={LANDOWNER_ROLES}>
+              <LandownerPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="landowner/status/:id"
+          element={
+            <RequireRole allowedRoles={LANDOWNER_ROLES}>
+              <LandownerStatusPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="landowner/status/:id/objection-filing/:objectionId"
+          element={
+            <RequireRole allowedRoles={LANDOWNER_ROLES}>
+              <ObjectionFilingPage />
+            </RequireRole>
+          }
+        />
+        <Route
+          path="landowner/*"
+          element={
+            <RequireRole allowedRoles={LANDOWNER_ROLES}>
+              <LandownerPage />
+            </RequireRole>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

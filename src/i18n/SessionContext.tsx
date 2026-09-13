@@ -1,14 +1,23 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import type { AuthedUser } from '../auth/authRepository';
 import { APP_ROLES, STATE_NAME_LABELS, type AppRole, type StateName } from '../domain';
 
 const SESSION_STORAGE_KEY = 'bhoomisetu-session';
 
 // Step 24: extends the Step 17/23 role picker with an optional state/district
 // scope, captured here but not yet enforced anywhere (enforcement is Step 26).
+// Step 62 Part A: added the optional `user` field carrying whichever
+// AuthedUser (citizen OTP or officer credential check) produced this session,
+// so the header/sidebar sign-out UI has a name/email to display. `user` is
+// deliberately optional/droppable — a session with a valid role but a
+// malformed or missing user must still work everywhere it did before this
+// step (guards, scoping) since nothing downstream reads `user` for access
+// control, only for display.
 export type Session = {
   role: AppRole;
   stateScope?: StateName;
   districtScope?: string;
+  user?: AuthedUser;
 };
 
 function isAppRole(value: unknown): value is AppRole {
@@ -17,6 +26,14 @@ function isAppRole(value: unknown): value is AppRole {
 
 function isStateName(value: unknown): value is StateName {
   return typeof value === 'string' && Object.prototype.hasOwnProperty.call(STATE_NAME_LABELS, value);
+}
+
+function isAuthedUser(value: unknown): value is AuthedUser {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return (candidate.type === 'citizen' || candidate.type === 'officer') && typeof candidate.name === 'string';
 }
 
 function readStoredSession(): Session | undefined {
@@ -50,6 +67,12 @@ function readStoredSession(): Session | undefined {
     if (typeof candidate.districtScope === 'string' && candidate.districtScope.length > 0) {
       session.districtScope = candidate.districtScope;
     }
+    // A malformed `user` field (e.g. from a future schema change or manual
+    // localStorage editing) is dropped rather than rejecting the whole
+    // session — the role/scope the visitor already picked keeps working.
+    if (isAuthedUser(candidate.user)) {
+      session.user = candidate.user;
+    }
     return session;
   } catch {
     return undefined;
@@ -60,6 +83,8 @@ type SessionContextValue = {
   session: Session | undefined;
   setSession: (session: Session) => void;
   clearSession: () => void;
+  signIn: (user: AuthedUser, role: AppRole, stateScope?: StateName, districtScope?: string) => void;
+  signOut: () => void;
 };
 
 const SessionContext = createContext<SessionContextValue | undefined>(undefined);
@@ -80,6 +105,29 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         }
       },
       clearSession: () => {
+        setSessionState(undefined);
+        try {
+          window.localStorage.removeItem(SESSION_STORAGE_KEY);
+        } catch {
+          // Ignore storage failures, same as above.
+        }
+      },
+      signIn: (user: AuthedUser, role: AppRole, stateScope?: StateName, districtScope?: string) => {
+        const nextSession: Session = { role, user };
+        if (stateScope !== undefined) {
+          nextSession.stateScope = stateScope;
+        }
+        if (districtScope !== undefined) {
+          nextSession.districtScope = districtScope;
+        }
+        setSessionState(nextSession);
+        try {
+          window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession));
+        } catch {
+          // Ignore storage failures, same as setSession above.
+        }
+      },
+      signOut: () => {
         setSessionState(undefined);
         try {
           window.localStorage.removeItem(SESSION_STORAGE_KEY);

@@ -67,8 +67,17 @@ export function getProjectTimelineAxis(
     }
   }
 
-  if (ticks.length === 0 || ticks[ticks.length - 1].percent < 99) {
-    ticks.push({ label: `Q${Math.floor(endDate.getUTCMonth() / 3) + 1} ${endDate.getUTCFullYear()}`, percent: 100 });
+  const finalLabel = `Q${Math.floor(endDate.getUTCMonth() / 3) + 1} ${endDate.getUTCFullYear()}`;
+  const lastTick = ticks[ticks.length - 1];
+  if (!lastTick) {
+    ticks.push({ label: finalLabel, percent: 100 });
+  } else if (lastTick.label === finalLabel) {
+    // The while loop above already emitted this quarter (e.g. axisEnd falls
+    // mid-quarter rather than exactly on its first day) — snap it to 100%
+    // instead of pushing a second tick with the same label/key.
+    lastTick.percent = 100;
+  } else if (lastTick.percent < 99) {
+    ticks.push({ label: finalLabel, percent: 100 });
   }
 
   const bars: ProjectTimelineBar[] = projects.map((project) => {

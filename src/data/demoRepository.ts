@@ -171,4 +171,44 @@ export const demoRepository: ParcelRepository = {
   async getProjectById(projectId) {
     return projects.find((project) => project.id === projectId);
   },
+
+  async importParcels(inputs) {
+    const imported: AcquisitionParcel[] = inputs.map((input, index) => {
+      const idSuffix = `${input.surveyNumber.replace(/[^a-zA-Z0-9]+/g, '-')}-${Date.now()}-${index}`;
+      const parcelId = `import-${idSuffix}`;
+      const historyEntry = {
+        id: `${parcelId}-history-${input.currentStage}`,
+        parcelId,
+        stage: input.currentStage,
+        enteredOn: input.stageEnteredOn,
+        handledByRole: input.handledByRole,
+        note: 'Seeded via bulk CSV import.',
+      };
+      return {
+        id: parcelId,
+        projectId: input.projectId,
+        surveyNumber: input.surveyNumber,
+        owner: { ...input.owner },
+        village: input.village,
+        tehsil: input.tehsil,
+        district: input.district,
+        areaHectares: input.areaHectares,
+        currentStage: input.currentStage,
+        stageEnteredOn: input.stageEnteredOn,
+        // Bulk import seeds a single history entry at the current stage (no
+        // recorded Section 19 declaration event) — stageEnteredOn is the best
+        // available date, same simplification demoData.ts documents.
+        declarationOn: input.stageEnteredOn,
+        compensationEstimate: input.compensationEstimate,
+        compensationPaid: input.compensationPaid,
+        coordinates: { ...input.coordinates },
+        history: [historyEntry],
+        documents: [],
+        objections: [],
+      };
+    });
+
+    parcels = [...parcels, ...imported];
+    return { imported: imported.length, parcels: imported };
+  },
 };

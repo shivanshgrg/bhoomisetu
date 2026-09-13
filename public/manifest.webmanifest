@@ -1,0 +1,18 @@
+{
+  "name": "BhoomiSetu — Land Acquisition Workflow",
+  "short_name": "BhoomiSetu",
+  "description": "Track land acquisition parcels, verify documents, and notify landowners — installable for field use.",
+  "start_url": "/official",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fbf7e6",
+  "theme_color": "#c77e0a",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

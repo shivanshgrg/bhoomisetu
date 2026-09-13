@@ -1,7 +1,17 @@
 import type { ReactNode } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useSession } from '../i18n/SessionContext';
 import { uiText, type TranslationEntry } from '../i18n/translations';
+
+function userInitials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+}
 
 type SidebarItem = {
   to: string;
@@ -18,6 +28,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   { to: '/official/national', label: uiText.officialShell.projectsLabel },
   { to: '/official/national', label: uiText.officialShell.rAndRLabel },
   { to: '/official/reports', label: uiText.officialShell.reportsLabel },
+  { to: '/official/bulk-import', label: uiText.officialShell.bulkImportLabel },
 ];
 
 type OfficialShellProps = {
@@ -31,6 +42,8 @@ type OfficialShellProps = {
 
 export function OfficialShell({ children }: OfficialShellProps) {
   const { t } = useLanguage();
+  const { session, signOut } = useSession();
+  const navigate = useNavigate();
 
   return (
     <div className="official-shell">
@@ -47,6 +60,27 @@ export function OfficialShell({ children }: OfficialShellProps) {
             </NavLink>
           ))}
         </nav>
+        {session?.user && (
+          <div className="sidebar-user">
+            <span className="sidebar-user-avatar" aria-hidden="true">
+              {userInitials(session.user.name)}
+            </span>
+            <span className="sidebar-user-info">
+              <span className="sidebar-user-name">{session.user.name}</span>
+              {session.user.email && <span className="sidebar-user-email">{session.user.email}</span>}
+            </span>
+            <button
+              type="button"
+              className="sidebar-signout-btn"
+              onClick={() => {
+                signOut();
+                navigate('/auth');
+              }}
+            >
+              {t(uiText.user.signOut)}
+            </button>
+          </div>
+        )}
       </aside>
       <div className="official-content">{children ?? <Outlet />}</div>
     </div>

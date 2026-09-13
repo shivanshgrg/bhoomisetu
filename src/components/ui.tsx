@@ -43,6 +43,17 @@ type DataTableProps = {
   caption: string;
   columns: string[];
   rows: Array<Array<ReactNode>>;
+  tableClassName?: string;
+};
+
+type PaginationProps = {
+  page: number;
+  pageCount: number;
+  onPageChange: (page: number) => void;
+  summary: string;
+  pageLabel: string;
+  previousLabel: string;
+  nextLabel: string;
 };
 
 export function Button({ className = '', variant = 'primary', ...props }: ButtonProps) {
@@ -156,10 +167,10 @@ export function EmptyState({ action, description, title }: EmptyStateProps) {
   );
 }
 
-export function DataTable({ caption, columns, rows }: DataTableProps) {
+export function DataTable({ caption, columns, rows, tableClassName = '' }: DataTableProps) {
   return (
     <div className="table-wrap">
-      <table>
+      <table className={tableClassName || undefined}>
         <caption>{caption}</caption>
         <thead>
           <tr>
@@ -180,6 +191,35 @@ export function DataTable({ caption, columns, rows }: DataTableProps) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+export function Pagination({ page, pageCount, onPageChange, summary, pageLabel, previousLabel, nextLabel }: PaginationProps) {
+  return (
+    <div className="pagination">
+      <p className="pagination-summary">{summary}</p>
+      {pageCount > 1 && (
+        <div className="pagination-controls">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+          >
+            {previousLabel}
+          </Button>
+          <span className="pagination-page">{pageLabel}</span>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={page >= pageCount}
+            onClick={() => onPageChange(page + 1)}
+          >
+            {nextLabel}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

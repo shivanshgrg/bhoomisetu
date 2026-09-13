@@ -1,14 +1,30 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { LandownerChatbot } from './LandownerChatbot';
+import { LanguagePicker } from './LanguagePicker';
 import { NotificationCenter } from './NotificationCenter';
 import { useDataSaver } from '../i18n/DataSaverContext';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useOffline } from '../i18n/OfflineContext';
+import { useSession } from '../i18n/SessionContext';
 import { uiText } from '../i18n/translations';
 import { useTheme } from '../theme/ThemeContext';
 
+function userInitials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+}
+
 export function AppShell() {
-  const { language, t, toggleLanguage } = useLanguage();
+  const { t } = useLanguage();
   const { isDataSaverOn, toggleDataSaver } = useDataSaver();
   const { theme, toggleTheme } = useTheme();
+  const { isOnline, pendingActions, isSyncing, syncNow } = useOffline();
+  const { session, signOut } = useSession();
+  const navigate = useNavigate();
 
   const navLinks = [
     { to: '/', label: t(uiText.nav.home), end: true },
@@ -39,14 +55,7 @@ export function AppShell() {
               {link.label}
             </NavLink>
           ))}
-          <button
-            className="nav-link lang-toggle"
-            type="button"
-            onClick={toggleLanguage}
-            aria-label={language === 'en' ? 'हिंदी में बदलें' : 'Switch to English'}
-          >
-            <span aria-hidden="true">🌐</span> {t(uiText.nav.languageToggleLabel)}
-          </button>
+          <LanguagePicker />
           <button
             className="nav-link lang-toggle"
             type="button"
@@ -65,12 +74,39 @@ export function AppShell() {
           >
             <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
           </button>
+          {pendingActions.length > 0 && (
+            <button className="nav-link lang-toggle offline-sync-chip" type="button" onClick={syncNow} disabled={isSyncing}>
+              <span aria-hidden="true">⟳</span> {pendingActions.length} {t(uiText.offline.pendingBadgePrefix)}
+              {!isSyncing && ` · ${t(uiText.offline.syncNowButton)}`}
+              {isSyncing && ` · ${t(uiText.offline.syncingButton)}`}
+            </button>
+          )}
           <NotificationCenter />
+          {session?.user && (
+            <div className="user-chip">
+              <span className="user-chip-avatar" aria-hidden="true">
+                {userInitials(session.user.name)}
+              </span>
+              <span className="user-chip-name">{session.user.name}</span>
+              <button
+                type="button"
+                className="user-chip-signout"
+                onClick={() => {
+                  signOut();
+                  navigate('/auth');
+                }}
+              >
+                {t(uiText.user.signOut)}
+              </button>
+            </div>
+          )}
         </nav>
       </header>
+      {!isOnline && <div className="offline-banner">{t(uiText.offline.bannerOffline)}</div>}
       <main className="page-frame">
         <Outlet />
       </main>
+      <LandownerChatbot />
     </div>
   );
 }

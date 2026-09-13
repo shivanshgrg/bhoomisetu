@@ -5,6 +5,12 @@ import { Button } from './ui';
 
 type VoiceInputButtonProps = {
   onResult: (transcript: string) => void;
+  // Step 65: this button is now reused in contexts other than the survey-
+  // number search it was originally built for (e.g. speaking an objection),
+  // where the default "Speak survey number" label would be misleading.
+  // Optional overrides keep every existing caller's behaviour unchanged.
+  speakLabel?: string;
+  listeningLabel?: string;
 };
 
 function getSpeechRecognitionConstructor(): (new () => SpeechRecognitionLike) | undefined {
@@ -14,7 +20,7 @@ function getSpeechRecognitionConstructor(): (new () => SpeechRecognitionLike) | 
   return window.SpeechRecognition ?? window.webkitSpeechRecognition;
 }
 
-export function VoiceInputButton({ onResult }: VoiceInputButtonProps) {
+export function VoiceInputButton({ onResult, speakLabel, listeningLabel }: VoiceInputButtonProps) {
   const { language, t } = useLanguage();
   const [isSupported, setIsSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -84,7 +90,7 @@ export function VoiceInputButton({ onResult }: VoiceInputButtonProps) {
     <div className="voice-input">
       <Button className="voice-input-btn" onClick={handleClick} type="button" variant="ghost">
         <span aria-hidden="true">{isListening ? '⏹' : '🎤'}</span>
-        {isListening ? t(uiText.voiceInput.listening) : t(uiText.voiceInput.speak)}
+        {isListening ? (listeningLabel ?? t(uiText.voiceInput.listening)) : (speakLabel ?? t(uiText.voiceInput.speak))}
       </Button>
       {error && (
         <p className="voice-input-error" role="alert">

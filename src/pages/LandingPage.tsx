@@ -1,44 +1,15 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CapabilityModal } from '../components/landing/CapabilityModal';
 import { LandingNav } from '../components/landing/LandingNav';
 import { Reveal, RevealLine } from '../components/landing/Reveal';
 import { StageWalk, type WalkStage } from '../components/landing/StageWalk';
-import { repository } from '../data';
-import {
-  ACQUISITION_STAGES,
-  APP_ROLES,
-  APP_ROLE_LABELS,
-  STATE_NAME_LABELS,
-  type AcquisitionParcel,
-  type AcquisitionProject,
-  type AppRole,
-  type StateName,
-} from '../domain';
+import { ACQUISITION_STAGES } from '../domain';
 import { useLanguage } from '../i18n/LanguageContext';
-import { useSession } from '../i18n/SessionContext';
 import { uiText } from '../i18n/translations';
 import '../styles/landing.css';
 import { useTheme } from '../theme/ThemeContext';
-
-// Where each app role lands by default. This is a demo convenience, not real
-// access control — see the APP_ROLES comment in src/domain/constants.ts.
-const ROLE_DESTINATION: Record<AppRole, string> = {
-  national_admin: '/official/national',
-  state_authority: '/official/national',
-  district_officer: '/official',
-  field_officer: '/official',
-  landowner: '/landowner',
-};
-
-function requiresStateScope(role: AppRole | undefined): boolean {
-  return role === 'state_authority' || role === 'district_officer' || role === 'field_officer';
-}
-
-function requiresDistrictScope(role: AppRole | undefined): boolean {
-  return role === 'district_officer' || role === 'field_officer';
-}
 
 const STEP_BODY_BY_STAGE_ID: Record<string, keyof typeof uiText.landing> = {
   notification: 'stepNotificationBody',
@@ -74,67 +45,9 @@ const CAPABILITIES = [
 export function LandingPage() {
   const { t } = useLanguage();
   const { theme } = useTheme();
-  const { session, setSession } = useSession();
-  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
-  const [projects, setProjects] = useState<AcquisitionProject[]>([]);
-  const [parcels, setParcels] = useState<AcquisitionParcel[]>([]);
-
-  const [pendingRole, setPendingRole] = useState<AppRole | undefined>(session?.role);
-  const [stateScope, setStateScope] = useState<StateName | undefined>(session?.stateScope);
-  const [districtScope, setDistrictScope] = useState<string | undefined>(session?.districtScope);
   const [activeCapabilityIndex, setActiveCapabilityIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    let isCancelled = false;
-
-    Promise.all([repository.listProjects(), repository.listParcels()])
-      .then(([loadedProjects, loadedParcels]) => {
-        if (!isCancelled) {
-          setProjects(loadedProjects);
-          setParcels(loadedParcels);
-        }
-      })
-      .catch(() => {
-        // Scope options simply stay empty on failure — the role picker itself
-        // still works, it just can't offer state/district selections yet.
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
-
-  const projectById = useMemo(() => new Map(projects.map((project) => [project.id, project])), [projects]);
-
-  const stateOptions = useMemo(() => {
-    const states = new Set<StateName>();
-    for (const project of projects) {
-      states.add(project.state);
-    }
-    return Array.from(states).sort((a, b) => STATE_NAME_LABELS[a].localeCompare(STATE_NAME_LABELS[b]));
-  }, [projects]);
-
-  const districtOptions = useMemo(() => {
-    if (!stateScope) {
-      return [];
-    }
-    const districts = new Set<string>();
-    for (const parcel of parcels) {
-      if (projectById.get(parcel.projectId)?.state === stateScope) {
-        districts.add(parcel.district);
-      }
-    }
-    return Array.from(districts).sort();
-  }, [parcels, projectById, stateScope]);
-
-  const needsState = requiresStateScope(pendingRole);
-  const needsDistrict = requiresDistrictScope(pendingRole);
-  const canSignIn =
-    pendingRole !== undefined &&
-    (!needsState || stateScope !== undefined) &&
-    (!needsDistrict || districtScope !== undefined);
 
   const walkStages: WalkStage[] = ACQUISITION_STAGES.map((stage) => ({
     id: stage.id,
@@ -142,29 +55,6 @@ export function LandingPage() {
     shortLabel: stage.shortLabel,
     body: t(uiText.landing[STEP_BODY_BY_STAGE_ID[stage.id]]),
   }));
-
-  function handlePickRole(nextRole: AppRole) {
-    setPendingRole(nextRole);
-    setStateScope(undefined);
-    setDistrictScope(undefined);
-  }
-
-  function handleStateChange(value: string) {
-    setStateScope((value || undefined) as StateName | undefined);
-    setDistrictScope(undefined);
-  }
-
-  function handleSignIn() {
-    if (!pendingRole || !canSignIn) {
-      return;
-    }
-    setSession({
-      role: pendingRole,
-      stateScope: needsState ? stateScope : undefined,
-      districtScope: needsDistrict ? districtScope : undefined,
-    });
-    navigate(ROLE_DESTINATION[pendingRole]);
-  }
 
   const heroRise = prefersReducedMotion
     ? {}
@@ -205,12 +95,12 @@ export function LandingPage() {
             >
               <p>{t(uiText.landing.description)}</p>
               <div className="bs-hero-actions">
-                <a className="bs-btn bs-btn-amber" href="#sign-in">
+                <Link className="bs-btn bs-btn-amber" to="/auth">
                   <span>{t(uiText.landing.heroCtaPrimary)}</span>
                   <span className="bs-btn-arrow" aria-hidden="true">
                     ↗
                   </span>
-                </a>
+                </Link>
                 <a className="bs-btn bs-btn-outline" href="#portals">
                   <span>{t(uiText.landing.heroCtaSecondary)}</span>
                   <span className="bs-btn-arrow" aria-hidden="true">
@@ -318,102 +208,6 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="bs-section" id="sign-in">
-          <div className="bs-shell">
-            <div className="bs-panel">
-              <div className="bs-panel-bar">
-                <h2>I am viewing as…</h2>
-                <span>Prototype convenience — not real security</span>
-              </div>
-              <div className="bs-panel-body">
-                <p>
-                  Pick a stakeholder role to sign in as. National and state-level roles see the full dashboard;
-                  district and field roles also choose the state and district they represent.
-                </p>
-
-                <div className="bs-role-grid" role="group" aria-label="App role picker">
-                  {APP_ROLES.map((appRole) => (
-                    <button
-                      key={appRole}
-                      type="button"
-                      className={
-                        pendingRole === appRole ? 'bs-role-option bs-role-option-active' : 'bs-role-option'
-                      }
-                      aria-pressed={pendingRole === appRole}
-                      onClick={() => handlePickRole(appRole)}
-                    >
-                      <span>{APP_ROLE_LABELS[appRole]}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {(needsState || (needsDistrict && stateScope)) && (
-                  <div className="bs-field-grid">
-                    {needsState && (
-                      <label className="bs-field" htmlFor="landing-state-scope">
-                        <span>State</span>
-                        <select
-                          id="landing-state-scope"
-                          value={stateScope ?? ''}
-                          onChange={(event) => handleStateChange(event.target.value)}
-                        >
-                          <option value="">Select a state…</option>
-                          {stateOptions.map((state) => (
-                            <option key={state} value={state}>
-                              {STATE_NAME_LABELS[state]}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-
-                    {needsDistrict && stateScope && (
-                      <label className="bs-field" htmlFor="landing-district-scope">
-                        <span>District</span>
-                        <select
-                          id="landing-district-scope"
-                          value={districtScope ?? ''}
-                          onChange={(event) => setDistrictScope(event.target.value || undefined)}
-                        >
-                          <option value="">Select a district…</option>
-                          {districtOptions.map((district) => (
-                            <option key={district} value={district}>
-                              {district}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                  </div>
-                )}
-
-                <div className="bs-panel-foot">
-                  {pendingRole && (
-                    <button
-                      type="button"
-                      className="bs-btn bs-btn-amber"
-                      disabled={!canSignIn}
-                      onClick={handleSignIn}
-                    >
-                      <span>Sign in as {APP_ROLE_LABELS[pendingRole]}</span>
-                      <span className="bs-btn-arrow" aria-hidden="true">
-                        ↗
-                      </span>
-                    </button>
-                  )}
-
-                  {session && (
-                    <p className="bs-session-note">
-                      Currently viewing as <span className="bs-session-badge">{APP_ROLE_LABELS[session.role]}</span>
-                      {session.stateScope && <> — {STATE_NAME_LABELS[session.stateScope]}</>}
-                      {session.districtScope && <> / {session.districtScope}</>}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       <footer className="bs-footer">

@@ -42,17 +42,25 @@ export const OBJECTION_STATUS_LABELS: Record<ObjectionStatus, string> = {
   resolved: 'Resolved',
 };
 
+// Step 65: each reason now carries the LARR 2013 Section 15 ground it maps
+// to, so a filed objection can cite a statute, not just a free-text reason.
+// 'other' has no clean Section 15(1) mapping — it stays a catch-all, cited
+// generically as Section 15 rather than a specific sub-clause.
 export const OBJECTION_REASONS = [
-  { id: 'ownership', label: 'Ownership dispute' },
-  { id: 'measurement', label: 'Measurement error' },
-  { id: 'valuation', label: 'Valuation objection' },
-  { id: 'compensation', label: 'Compensation dispute' },
-  { id: 'other', label: 'Other' },
+  { id: 'ownership', label: 'Ownership dispute', statute: 'Section 15(1)(a)' },
+  { id: 'measurement', label: 'Measurement error', statute: 'Section 15(1)(b)' },
+  { id: 'valuation', label: 'Valuation objection', statute: 'Section 15(1)(c)' },
+  { id: 'compensation', label: 'Compensation dispute', statute: 'Section 15(1)(c)' },
+  { id: 'other', label: 'Other', statute: 'Section 15' },
 ] as const;
 export type ObjectionReason = (typeof OBJECTION_REASONS)[number]['id'];
 
 export const OBJECTION_REASON_LABELS: Record<ObjectionReason, string> = Object.fromEntries(
   OBJECTION_REASONS.map((objectionReason) => [objectionReason.id, objectionReason.label]),
+) as Record<ObjectionReason, string>;
+
+export const OBJECTION_REASON_STATUTES: Record<ObjectionReason, string> = Object.fromEntries(
+  OBJECTION_REASONS.map((objectionReason) => [objectionReason.id, objectionReason.statute]),
 ) as Record<ObjectionReason, string>;
 
 export const DOCUMENT_STATUSES = ['pending_verification', 'verified', 'rejected'] as const;

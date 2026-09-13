@@ -2,13 +2,37 @@ import {
   PROJECT_STATUS_LABELS,
   type AdvanceGate,
   type DashboardStatus,
+  type DocumentCheckSignalStatus,
   type DocumentStatus,
+  type EscalationLevel,
+  type LapseRisk,
+  type LapseStatus,
   type ParcelCalculatedStatus,
   type ProjectStatus,
   type RiskLevel,
   type StageId,
 } from '../domain';
 import { documentKindLabels, uiText, type TranslationEntry } from '../i18n/translations';
+
+export function getPaginationSummary(
+  totalCount: number,
+  page: number,
+  pageSize: number,
+  t: (entry: TranslationEntry) => string,
+): string {
+  if (totalCount === 0) {
+    return `0 ${t(uiText.pagination.ofWord)} 0`;
+  }
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, totalCount);
+  return `${t(uiText.pagination.showingPrefix)} ${from}${to > from ? ` ${t(uiText.pagination.showingToWord)} ${to}` : ''} ${t(
+    uiText.pagination.ofWord,
+  )} ${totalCount}`;
+}
+
+export function getPaginationPageLabel(page: number, pageCount: number, t: (entry: TranslationEntry) => string): string {
+  return `${t(uiText.pagination.pagePrefix)} ${page} ${t(uiText.pagination.ofWord)} ${pageCount}`;
+}
 
 export function getBadgeTone(status: DashboardStatus) {
   if (status === 'stuck') {
@@ -125,6 +149,77 @@ export function getAdvanceGateReasonText(
   }
 
   return t(uiText.parcelDetail.workflowCompleteDescription);
+}
+
+export function getSignalTone(status: DocumentCheckSignalStatus) {
+  if (status === 'fail') {
+    return 'danger';
+  }
+
+  if (status === 'warning') {
+    return 'warning';
+  }
+
+  if (status === 'pass') {
+    return 'success';
+  }
+
+  return 'neutral';
+}
+
+export function getEscalationTone(level: EscalationLevel) {
+  if (level === 'ministry') {
+    return 'danger';
+  }
+
+  if (level === 'state_authority') {
+    return 'warning';
+  }
+
+  if (level === 'district_officer') {
+    return 'info';
+  }
+
+  return 'neutral';
+}
+
+export function getLapseRiskTone(risk: LapseRisk) {
+  if (risk === 'lapsed') {
+    return 'danger';
+  }
+
+  if (risk === 'approaching') {
+    return 'warning';
+  }
+
+  return 'success';
+}
+
+export function getLapseRiskIcon(risk: LapseRisk) {
+  if (risk === 'lapsed') {
+    return '⛔';
+  }
+
+  if (risk === 'approaching') {
+    return '⏳';
+  }
+
+  return '✅';
+}
+
+// Total statutory window per statute (Section 19: 365 days, Section 24: 5
+// years) — used only to turn LapseStatus's daysRemaining back into an
+// approximate "months of process" figure for the kill-shot banner text,
+// without adding a derived field to the domain type itself.
+const LAPSE_WINDOW_DAYS: Record<LapseStatus['statute'], number> = {
+  section_19: 365,
+  section_24: 365 * 5,
+  none: 0,
+};
+
+export function getLapseMonthsElapsed(lapseStatus: LapseStatus): number {
+  const daysElapsed = LAPSE_WINDOW_DAYS[lapseStatus.statute] - lapseStatus.daysRemaining;
+  return Math.max(0, Math.round(daysElapsed / 30));
 }
 
 export function getRiskTone(level: RiskLevel) {

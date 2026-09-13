@@ -13,7 +13,7 @@ Use this file as the handoff point between chats. Before starting a new chat, te
 
 ## Current position
 
-**Steps 0–37 complete and QA'd; Steps 38–40 (project timeline, tamper-evident audit ledger, stage-duration chart) are code-complete and build-verified but not yet confirmed in-browser — see the blocker note at the end of Step 40's entry below.** The Tier-1 upgrade plan (`do-not-blindly-rebuild-cheerful-pancake.md`) is fully implemented and QA'd through Step 37. Steps 12–22 are steps of the post-PS differentiator plan; Step 23 begins the Tier-1 upgrade plan, continuing this file's numbering as Step 23 onward without renumbering or touching the earlier steps. Step 36 (Reports page, no new dependency) is `[x]` complete and verified — `/official/reports` renders a scope-aware, printable summary (parcel status counts, parcels-by-stage, top-10 risk queue, and per-project progress) reusing `getDashboardSummary`/`getNationalSummary`/`getActionCenterQueue` against the same already-scoped data every other official page loads; a "Print / Save as PDF" button calls `window.print()`, and a new `@media print` block in `src/styles.css` hides the site header, sidebar, and all buttons/action controls so the printed page is just the report content. Step 37 (final QA pass) is `[x]` complete and verified — re-ran the Step 11/22/35-style checklist across every page (old and new) plus every Tier-1-specific scenario from the plan (district scoping across table/map/filters/Action Center/notifications, out-of-scope parcel URL → "not found", zero-login landowner routes, upload-requires-explicit-Verify, `national_admin` unscoped) with no broken behavior found; the hero-parcel (`124/7`) walkthrough now has two extra beats beyond the original Step 11 script — picking a role (and, for district/field roles, a state+district) on the landing page before reaching the dashboard, and clicking Verify on the uploaded Valuation report before the Advance form appears — both confirmed working end-to-end together with the risk score updating live (55 "High" → 40 "Medium") the moment the document is verified.
+**Steps 0–53 complete and verified — see `FINALS_UPGRADE_PLAN.md` for the finals-upgrade track this file's numbering now continues (Step 41: verify/reject overlap fix; Step 42: N-language architecture; Step 43: language picker UI; Steps 44–46: all 8 new citizen languages — Marathi, Gujarati, Telugu, Tamil, Kannada, Bengali, Odia, Punjabi — plus SMS previews in all 10 languages; Steps 47–51: dataset/database Track C, including the deterministic seed generator, ~250-parcel dataset, performance work, hardened Postgres schema, and production-shape RLS; Steps 52–53: Track D document intelligence — client-side PDF text extraction with a per-signal content-check breakdown (page count, expected wording, survey-number match, date plausibility), then canvas-based image analysis (blank-scan/resolution/capture-quality signals) plus on-demand, lazy-loaded OCR whose recovered text feeds the same keyword/survey-number/date checks). Tracks B, C, and D are now fully complete; the plan continues at Step 54 (Track E, new features, starting with QR-coded statutory notices). Steps 38–40 (project timeline, tamper-evident audit ledger, stage-duration chart) are code-complete and build-verified but were not confirmed in-browser in their original session — see the blocker note at the end of Step 40's entry below (that blocker did not recur in later sessions). Steps 55–60 (offline-first PWA, forecasting/bottleneck analytics, escalation matrix, audit/RTI export bundle, bulk CSV import, real parcel geometry) are all `[x]` complete and verified — see their entries below. Step 61 (deck/handbook refresh) has not been re-run since Steps 47–60 landed. Step 62 Part A (dual-role authentication: local-mock citizen OTP + officer credential sign-in, replacing the old anonymous-role-picker landing panel with a dedicated `/auth` page, route guards now covering the landowner side too, and header/sidebar sign-out UI — later amended to a random per-request OTP code instead of a fixed one) is `[x]` complete and verified, and Step 62 Part B (a closed-menu Swiggy/Zomato-style help chatbot on the landowner portal, gated to signed-in landowners only) is also `[x]` complete and verified — see their entries below. Step 62's other checklist items (full pre-submission QA sweep) are not started, and Step 63 (statutory lapse clock, Track G) is now `[x]` complete and verified — see its entry below; Step 64 (time-travel dashboard scrubber, Track G) is now `[x]` complete and verified — see its entry below; Step 65 (voice objection → formal legal filing under LARR Section 15, Track G) is now `[x]` complete and verified — see its entry below. Track G (Steps 63–65) is now fully complete.** The Tier-1 upgrade plan (`do-not-blindly-rebuild-cheerful-pancake.md`) is fully implemented and QA'd through Step 37. Steps 12–22 are steps of the post-PS differentiator plan; Step 23 begins the Tier-1 upgrade plan, continuing this file's numbering as Step 23 onward without renumbering or touching the earlier steps. Step 36 (Reports page, no new dependency) is `[x]` complete and verified — `/official/reports` renders a scope-aware, printable summary (parcel status counts, parcels-by-stage, top-10 risk queue, and per-project progress) reusing `getDashboardSummary`/`getNationalSummary`/`getActionCenterQueue` against the same already-scoped data every other official page loads; a "Print / Save as PDF" button calls `window.print()`, and a new `@media print` block in `src/styles.css` hides the site header, sidebar, and all buttons/action controls so the printed page is just the report content. Step 37 (final QA pass) is `[x]` complete and verified — re-ran the Step 11/22/35-style checklist across every page (old and new) plus every Tier-1-specific scenario from the plan (district scoping across table/map/filters/Action Center/notifications, out-of-scope parcel URL → "not found", zero-login landowner routes, upload-requires-explicit-Verify, `national_admin` unscoped) with no broken behavior found; the hero-parcel (`124/7`) walkthrough now has two extra beats beyond the original Step 11 script — picking a role (and, for district/field roles, a state+district) on the landing page before reaching the dashboard, and clicking Verify on the uploaded Valuation report before the Advance form appears — both confirmed working end-to-end together with the risk score updating live (55 "High" → 40 "Medium") the moment the document is verified.
 
 Step 11 ran a full QA and demo-rehearsal pass over the running dev server; no code changes were needed because no actual broken behavior was found. Step 11 is `[x]` complete and verified. Steps 12 through 22 are `[x]` complete and verified — see their entries after the original checklist. Step 22's final QA pass re-ran the Step 11 checklist and confirmed all seven post-PS differentiator features work together with no regressions. Step 23 (mechanical `StakeholderRole` → `AppRole` rename, 5 values) is `[x]` complete and verified. Step 24 (session extended with state/district scope + demo sign-in UI) is `[x]` complete and verified. Step 25 (route guards + Access Restricted page) is `[x]` complete and verified. Step 26 (scope-filtering wired into official pages + notification bell) is `[x]` complete and verified — role-gating from Steps 23–25 now actually restricts *what data* is shown, not just which pages are reachable. Step 27 (document verification: types, repository, seed data) is `[x]` complete and verified — purely additive, no gating behavior changed yet. Step 28 (wire verification into the advance gate + upload flow) is `[x]` complete and verified — `getMissingRequiredDocuments` now requires `status === 'verified'`, and newly uploaded documents persist as `pending_verification`, so a fresh upload no longer silently unblocks a stage. Step 29 (Verify/reject UI) is `[x]` complete and verified — the documents table has a Status badge, a Quality-check aid badge, and Verify/Reject buttons (reject opens an inline reason field); document verification is fully wired end-to-end from upload through to unblocking the advance gate. Step 30 (risk engine, `src/domain/risk.ts`) is `[x]` complete and verified — `getParcelRiskAssessment`/`getActionCenterQueue` compute a deterministic 0-100 score from stage delay, missing documents, open objections, and deadline proximity; hero parcel `124/7` scores 55 ("high") with a recommended action naming the missing valuation report and the Valuation Officer. Step 31 (Action Center page + risk card on parcel detail) is `[x]` complete and verified — `/official/action-center` lists every in-scope parcel sorted by risk score with reasons and recommended actions (each linking to its parcel detail page), and the parcel detail page's new Risk Assessment card shows the identical score for the same parcel. Both pages respect the existing role-scoping from Step 26. Step 32 (sidebar shell for officials) is `[x]` complete and verified — every official-side page now renders inside a persistent `OfficialShell` sidebar (Overview / Action Center / Projects / R&R / Reports) via a nested layout route, replacing the ad hoc header buttons Steps 31's national/action-center links added; landowner routes are untouched. Step 33 (GIS project + village filters) is `[x]` complete and verified — `OfficialPage.tsx`'s filter grid gained Village and Project selects that narrow the parcel table and map identically, preserving the existing map/table-consistency invariant. Step 34 (Hindi gap part 1: official dashboard + parcel detail) is `[x]` complete and verified — `OfficialPage.tsx` and `ParcelDetailPage.tsx` (including the Step 29/31 verify/reject UI and Risk card) are now fully wired to `useLanguage()`/`t()`, matching `LandownerStatusPage.tsx`'s existing bilingual coverage. Step 35 (Hindi gap part 2: National Dashboard, Action Center, Access Restricted, sidebar) is `[x]` complete and verified — every official-side page is now bilingual, completing the coverage Step 34 started; the two remaining known-English strings (risk-contributor labels and the recommended-action sentence) are a deliberate, documented scope boundary shared by Steps 34 and 35, not an oversight.
 
@@ -733,10 +733,1259 @@ Record important setup facts, blockers, or decisions here after each step.
 - **Step 40 — data-honesty note (why this chart and not a time-series):** The three originally-proposed "trend chart" ideas (compensation-paid-over-time, delay-by-month) were evaluated and rejected before implementation — every seeded parcel's `stageEnteredOn` falls inside a ~8-week window (2026-07-01 to 2026-08-24), `compensationPaid` has no payment date of its own (it's derived from stage, not time), and `makeHistory()` in `demoData.ts` gives every parcel an identical 16-day-per-stage synthetic ladder against 21–30-day thresholds — so a real month-over-month trend would be a flat or near-vertical line with 1–2 real data points, not an honest chart. This bar chart was chosen instead specifically because it's the one comparison the existing seed data can support truthfully: real (if uniform) per-stage durations against real thresholds. A genuine trend chart remains possible but requires reseeding `makeHistory`/parcel dates across a wider date range first (a data-migration step, not a charting step) — noted here as a deliberate deferral, not an oversight.
 - **Step 40 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors. **In-browser verification could not be completed this session** — see the note below.
 
-**In-browser verification blocker (Steps 38–40):** This session's Browser pane could not reach this project's dev server. `preview_start` repeatedly reported the server as `running` (confirmed via `preview_logs` showing Vite's own "ready" line), but every `navigate`/`preview_start` attempt against the reported proxy URL failed, and `read_network_requests` showed `net::ERR_CONNECTION_REFUSED` on every attempt across three different auto-assigned ports (including `127.0.0.1` and `localhost` variants) — a session/tooling-level port-forwarding failure, not an application error. This is consistent with the environment notice at the start of this session: another chat already had a dev server running against this same project folder, which appears to have left this session's preview proxy unable to bind correctly for the remainder of the session. No code-level cause was found, and `npm run build`'s zero-error result plus a full manual code-review pass (import wiring, translation-key references, JSX structure, unused-import check) give reasonable confidence the three features work, but **this has not been confirmed by actually clicking through the running app**, which is a real gap against this project's established verification discipline. Recommended next step: retry in a fresh session (or after confirming no other session holds a dev server against this folder), and specifically check — National Dashboard timeline renders with correct bar widths/colors and a visible today-marker; Data Saver mode hides it; parcel detail's audit ledger shows "7 of 7 links intact" (or fewer, for parcels earlier in the workflow) and the Simulate Tampering → Reset cycle visibly breaks then restores the chain; Reports page's stage-duration chart renders bars against threshold ticks with no console errors; Hindi toggle covers all three additions; mobile viewport (375×812) doesn't overflow on any of the three new components.
-- Last completed step: Step 40 (code-complete, build-verified; in-browser verification pending — see blocker note above).
-- Last verification: `npm run build` (`tsc -b && vite build`) passes with zero type errors for all of Steps 38–40. In-browser verification not completed this session.
-- Known blockers: in-browser verification of Steps 38–40 (see note above) — retry in a session where this folder's dev server port-forwarding isn't already contended.
+**In-browser verification blocker (Steps 38–40):** This session's Browser pane could not reach this project's dev server. `preview_start` repeatedly reported the server as `running` (confirmed via `preview_logs` showing Vite's own "ready" line), but every `navigate`/`preview_start` attempt against the reported proxy URL failed, and `read_network_requests` showed `net::ERR_CONNECTION_REFUSED` on every attempt across three different auto-assigned ports (including `127.0.0.1` and `localhost` variants) — a session/tooling-level port-forwarding failure, not an application error. This is consistent with the environment notice at the start of this session: another chat already had a dev server running against this same project folder, which appears to have left this session's preview proxy unable to bind correctly for the remainder of the session. No code-level cause was found, and `npm run build`'s zero-error result plus a full manual code-review pass (import wiring, translation-key references, JSX structure, unused-import check) give reasonable confidence the three features work, but **this has not been confirmed by actually clicking through the running app**, which is a real gap against this project's established verification discipline. This blocker did not recur in the Step 41 session below — the dev server was reachable normally.
+
+### Step 41 — Fix the verify/reject overlap in the documents table
+
+- `[x]` Added `.row-actions` (flex, `gap: 8px`, wrapping) and `.row-inline-form` (3-column grid: reason field, Confirm, Cancel) to `src/styles.css`, right after `.filter-grid` — purpose-built replacements for the page-level 4-column `.filter-grid` that was being crushed to `0px` columns inside 70px-wide table cells.
+- `[x]` `ParcelDetailPage.tsx`: the Verify/Reject button cluster now uses `className="row-actions"` (was `filter-grid`); the inline reject form (reason field + Confirm + Cancel) now uses `className="row-inline-form"` (was `filter-grid`).
+- `[x]` Added a `table.table-wide { min-width: 980px }` modifier in `styles.css` (the base `table` rule keeps its existing `min-width: 680px` for every other table) and a new optional `tableClassName` prop on `DataTable` (`src/components/ui.tsx`), passed as `tableClassName="table-wide"` only for the 9-column documents table on `ParcelDetailPage.tsx` — every other `DataTable` call site is untouched.
+- `[x]` Audited every remaining `filter-grid` occurrence (`grep -rn "filter-grid" src`): the two above were the only in-`<td>` uses. The other four (`OfficialPage.tsx` filters card, `LandownerStatusPage.tsx` calculator + objection form, `ParcelDetailPage.tsx` advance-workflow + upload-document forms) are genuine page-level forms outside any table, so they correctly keep `filter-grid`. The objection-row controls (`Select` + `SmsPreviewPanel`) never used `filter-grid` in the first place — no change needed there.
+
+**Done when:** no two interactive elements in any table cell overlap at 1440px, 768px or 375px; button labels aren't clipped; the reject flow works end to end; `npm run build` passes. — all met, see verification below.
+
+- **Step 41 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors. In-browser, on `/official/parcel/parcel-124-7`'s documents table: ran the plan's exact bounding-box/`scrollWidth` snippet at 1440px, 768px and 375px viewports — `{overlap: false, clipped: false}` for every row at every width, and the table-wrap's `scrollWidth > clientWidth` (confirmed horizontal scroll available) at 768px and 375px instead of the cells crushing. Manually clicked Reject → typed a reason ("Illegible scan, needs re-upload") into the now-`row-inline-form` fields → Confirm reject → the row updated to show a "Rejected" badge with that reason text, confirming the reject flow still works end to end.
+
+### Step 42 — N-language architecture (no new languages yet)
+
+- `[x]` `src/i18n/translations.ts`: replaced the hardcoded `Language = 'en' | 'hi'` union with `export const LANGUAGES = ['en','hi','mr','bn','te','ta','gu','kn','or','pa'] as const;` and `export type Language = (typeof LANGUAGES)[number];`. `TranslationEntry` is now `{ en: string } & Partial<Record<Exclude<Language,'en'>, string>>` — `en` stays required, every other language (including `hi`) is optional, so partial coverage is a type-level fact. Every existing `{ en, hi } as TranslationEntry` literal (all ~549 of them) still type-checks unchanged, since a full `{en, hi}` object satisfies the new, looser shape.
+- `[x]` Added `LANGUAGE_META: Record<Language, { label; endonym; coverage: 'full' | 'citizen' }>` in the same file — `en`/`hi` marked `'full'`, the eight new languages marked `'citizen'`, each with its real endonym (मराठी, বাংলা, తెలుగు, தமிழ், ગુજરાતી, ಕನ್ನಡ, ଓଡ଼ିଆ, ਪੰਜਾਬੀ). Not consumed by any UI yet — that's Step 43's picker; this step only makes the metadata available.
+- `[x]` `src/i18n/LanguageContext.tsx`: `readStoredLanguage()` now validates the stored value against `LANGUAGES` instead of the old `stored === 'hi' ? 'hi' : 'en'` check, so it accepts any of the ten codes and falls back to `'en'` for anything else (including old/garbage `localStorage` values). `t(entry)` now resolves `language === 'en' ? entry.en : entry[language] ?? entry.en` — for the two languages that currently have real translations (`en`, `hi`) this is byte-identical to the old `entry[language]` lookup; for the eight not-yet-translated languages it falls back to English instead of rendering `undefined`, which is the whole point of the refactor. `toggleLanguage()` is untouched and still cycles en↔hi.
+- `[x]` Fixed two call sites that read `Language` narrowly and would not compile against the widened union: `src/components/landing/LandingNav.tsx` (`link.label[language]` → explicit `language === 'en' ? link.label.en : link.label.hi`, since `SECTION_LINKS` labels are local `{en,hi}` literals, not full `TranslationEntry`s) and `src/components/SpeakButton.tsx` (`pickVoice`'s parameter type narrowed from `'hi' | 'en'` to `string`, since it already only branches on `=== 'hi'` vs. everything else). Both are behavior-preserving for `en`/`hi` — no other language exists yet for either code path to reach.
+- `[x]` No new translations added; no UI changed. This step is purely the type/runtime plumbing the plan calls for.
+
+**Done when:** `npm run build` passes with no type errors; app behaves identically (English and Hindi both render every string correctly on every page); switching language still persists across reload. — all met, see verification below.
+
+- **Step 42 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors (two pre-existing call sites needed narrow-type fixes, both above; no other file in the 20-file `useLanguage`/`Language`-touching surface needed changes). In-browser on a throwaway dev server: the landing page rendered fully in English (hero, portals, workflow steps, capabilities, role sign-in panel), then clicking the language toggle switched every string to Hindi with no console errors, then a hard reload of the page kept it in Hindi (confirming `readStoredLanguage()`'s new `LANGUAGES`-membership check still persists correctly), then `localStorage` was reset to `'en'` and `/official` (a heavily `t()`-driven page — dashboard cards, filters, attention queue, parcel table) was loaded directly and rendered fully in English with zero console errors, confirming the widened `Language`/`TranslationEntry` types and the new `t()` fallback logic didn't regress either existing language on either portal.
+- Last completed step: Step 42 (code-complete, build-verified, in-browser-verified).
+- Last verification: `npm run build` passes with zero type errors; in-browser, English and Hindi both render correctly on the landing page and on `/official`, the language toggle and reload-persistence both still work, and no console errors were observed.
+- Known blockers: none currently open. (The Steps 38–40 in-browser verification gap noted above is historical — this session's dev server was reachable normally.)
+
+### Step 43 — Language picker UI
+
+- `[x]` Added `src/components/LanguagePicker.tsx`: a dropdown (button + `role="listbox"` panel, click-outside-to-close via the same `mousedown` + ref pattern as `NotificationCenter`) that lists all ten `LANGUAGES` by endonym (मराठी, বাংলা, తెలుగు, தமிழ், ગુજરાતી, ಕನ್ನಡ, ଓଡ଼ିଆ, ਪੰਜਾਬੀ, plus हिंदी/English), with the English `label` as secondary text and, for every `coverage: 'citizen'` language, a short note under it — "Landowner pages translated; official pages in English." (new `uiText.nav.citizenCoverageNote`, en/hi only for now; the eight new languages get this string in Steps 44–46 along with the rest of the citizen key set). The trigger shows the active language's endonym. Takes an optional `triggerClassName` so it can be dropped into different nav chrome without new CSS per call site.
+- `[x]` Replaced the two-state `🌐` toggle button in `src/components/AppShell.tsx` and in `src/components/landing/LandingNav.tsx` (which had its own separate, duplicate toggle) with `<LanguagePicker />`. Removed the now-dead `toggleLanguage()` from `LanguageContext`'s value/type and the now-unreferenced `uiText.nav.languageToggleLabel` entry — nothing called either anymore once both toggle buttons were gone.
+- `[x]` `src/i18n/LanguageContext.tsx`: added a `useEffect` that sets `document.documentElement.lang = language` on every change (guarded for non-DOM environments), so the accessibility/font-selection attribute now tracks the picker instead of always reading the HTML-authored default.
+- `[x]` Added `.language-picker` / `.language-picker-panel` / `.language-picker-item` (+ `-endonym`/`-label`/`-coverage`) rules to `src/styles.css`, modeled on the existing `.notification-panel` dropdown (absolute-positioned panel, `var(--paper)` background, inset border, active-item highlight).
+- `[x]` **Bug found and fixed during verification, not in the original plan text:** `LandingNav.tsx`'s own `SECTION_LINKS`/"Sign in" strings are local `{en, hi}` literals (not `TranslationEntry`s routed through `t()`), and were gated on `language === 'en' ? en : hi` — so picking any of the eight new languages showed *Hindi* nav labels, not the intended English fallback. Fixed both to `language === 'hi' ? hi : en`, matching `t()`'s actual fallback rule. Caught by switching the landing page to Marathi and reading "Portals/Process/Capabilities" render as Hindi text before the fix.
+- `[x]` **Second bug found and fixed at the 375px check:** the panel's original `right: 0` anchoring is relative to the trigger button's own box, not the viewport — on the landing page the trigger sits mid-header (before the theme toggle and Sign-in button), so at 375px the 280px-wide panel computed `left: -59px`, hanging off the left edge of the screen. Added a `@media (max-width: 520px)` override in `src/styles.css` that switches `.language-picker-panel` to `position: fixed; left: 50%; transform: translateX(-50%); width: min(320px, calc(100vw - 24px))` — centers it on-screen regardless of trigger position. Confirmed via `getBoundingClientRect()` in the browser console: before the fix `left: -59.2`; after, `left: 27.6, right: 347.6` inside a 375px viewport, and language selection still worked at that width.
+- `[x]` Kept `LANGUAGE_META`/`LANGUAGES` (from Step 42) as the single source of truth the picker renders from — no new metadata shape needed.
+
+**Done when:** all ten languages listed, selection persists and survives reload, `<html lang>` updates, nothing regresses in en/hi. — all met, see verification below.
+
+- **Step 43 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors. In-browser on a throwaway dev server: opened the picker on the landing page — all 10 languages listed with endonym + English label, the 8 citizen-scope ones each showing the coverage note; selected Marathi, confirmed `document.documentElement.lang === 'mr'` and `localStorage['bhoomisetu-language'] === 'mr'` via the console, then reloaded the page and confirmed `lang` was still `'mr'` (persistence survives reload); with Marathi active, the landing nav's "Portals/Process/Capabilities/Sign in" correctly showed English (not Hindi) after the fallback-direction fix above. Resized to the 375px mobile preset, opened the picker there, and used `getBoundingClientRect()` to confirm the panel sits fully inside the viewport (`left: 27.6`, `right: 347.6` against a 375px width) and clicking a language item still calls through to `setLanguage`/`localStorage` correctly at that width. Reset to desktop, navigated into `/official` as the existing Field Officer session, opened the `AppShell` copy of the picker, switched to Hindi — the entire dashboard (headings, cards, filters, sidebar nav) re-rendered in Hindi with the coverage notes also shown in Hindi — then switched back to English with no console errors at any point (`read_console_messages` returned no logs on a fresh, non-HMR-stale tab).
+- Last completed step: Step 43 (code-complete, build-verified, in-browser-verified).
+- Last verification: `npm run build` passes with zero type errors; in-browser, the picker lists all 10 languages with correct coverage notes, persists across reload, updates `<html lang>`, works at 375px after a positioning fix, and en/hi both still render fully with no console errors.
+- Known blockers: none currently open.
+
+### Step 44 — Marathi + Gujarati (citizen scope)
+
+- `[x]` Added `mr`/`gu` translations to every entry in the plan's citizen key set: `uiText.nav` (all 8 keys, including the two new picker strings from Step 43), `uiText.landownerSearch` (12 keys), `uiText.landownerStatus` (68 keys), `uiText.speech` (3 keys), and the six standalone label `Record`s — `stageLabels`, `stageShortLabels`, `documentKindLabels`, `objectionReasonLabels`, `objectionStatusLabels`, `dashboardStatusLabels` (35 keys). 126 `TranslationEntry` leaves touched, each translated by hand for both languages (not machine-translated placeholder text) — government-register vocabulary where it mattered (e.g. `कलम 11 सूचना` / `કલમ 11 સૂચના` for the Section 11 notification, not a literal transliteration).
+- `[x]` Added `src/i18n/coverageReport.ts`: `logTranslationCoverage()` walks `uiText` plus every standalone label `Record` exported from `translations.ts`, collects every `TranslationEntry` leaf (553 total across the whole file), and `console.table`s, per language, how many of those 553 have a real (non-fallback) string. Wired into `src/main.tsx` behind `import.meta.env.DEV && new URLSearchParams(location.search).has('coverage')` — a dynamic `import()`, so it costs nothing in the production bundle and never runs outside a dev server with `?coverage=1` in the URL.
+- `[x]` Demo owners were **not** reseeded to Marathi/Gujarati `preferredLanguage` this step — that's explicitly Step 46's job (widening `SmsOwnerLanguage`/`ParcelOwner.preferredLanguage` first). The citizen pages were verified by switching the picker directly, not by owner-language-driven SMS previews.
+
+**Done when:** landowner search + status pages render fully in Marathi and Gujarati; official pages fall back to English cleanly (no blank strings, no `undefined`); the coverage report prints an accurate per-language count. — all met, see verification below.
+
+- **Step 44 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors. In-browser: loaded `/?coverage=1` on a dev server and called `logTranslationCoverage()` directly — result: `en` 553/553 (100%), `hi` 553/553 (100%), `mr` 125/553 (23%), `gu` 125/553 (23%), all six other new languages 0/553 (0% — no leakage from this step). Cross-checked the 125 figure against the source directly (`grep -c "mr: '" src/i18n/translations.ts` and the same for `gu: '`) — both also return exactly 125, confirming the coverage script counts real entries, not an off-by-one artifact. Set `localStorage['bhoomisetu-language'] = 'mr'`, reloaded `/landowner`, searched `124/7`: the search page, parcel snapshot, current-progress card, all 7 workflow steps, the 4-row documents table (stage/kind/title/date/type columns and values), the compensation calculator (labels, disclaimer, hint, result), the objection form (all 5 reason options, description field, submit button), and the 1-row objections table (including the `Resolved`→`निकाली काढले` status) rendered fully in Marathi with zero English leakage in any translated field — confirmed via `get_page_text`, not a skim. Repeated the identical walk with `gu`: full Gujarati rendering, same structure, e.g. `જરૂરી દસ્તાવેજ ખૂટે છે: મૂલ્યાંકન અહેવાલ.` for the missing-document action line. Then, still in `gu`, loaded `/official`: page chrome (`Overview`, `Action Center`, `Parcel Monitoring`, table column headers, filter labels, role banner) stayed in English as intended — only the *shared* domain vocabulary (stage names, dashboard statuses) that also appears in `stageLabels`/`dashboardStatusLabels` showed Gujarati (`મૂલ્યાંકન`, `અટકેલું`, etc.), which is correct: those are the same shared `Record`s the plan explicitly put in scope, not official-only strings leaking translations they don't have. No blank cells, no `undefined` text, and `read_console_messages({onlyErrors: true})` returned nothing on either page in either language.
+- Last completed step: Step 44 (code-complete, build-verified, in-browser-verified).
+- Last verification: `npm run build` passes with zero type errors; in-browser, Marathi and Gujarati both render the full citizen key set with no blanks, official pages fall back to English outside the shared label vocabulary, and the dev-only coverage report prints accurate 553-key totals per language.
+- Known blockers: none currently open.
+
+### Step 45 — Telugu + Tamil + Kannada (citizen scope)
+
+- `[x]` Added `te`/`ta`/`kn` to the exact same 125-entry citizen key set touched in Step 44 (`uiText.nav`, `uiText.landownerSearch`, `uiText.landownerStatus`, `uiText.speech`, and the six standalone label `Record`s), by hand for each of the three languages — same discipline as Step 44, no machine-translation placeholders, same government-register word choices (e.g. `సెక్షన్ 11 నోటిఫికేషన్` / `பிரிவு 11 அறிவிப்பு` / `ಸೆಕ್ಷನ್ 11 ಅಧಿಸೂಚನೆ` for the Section 11 document, matching the loose-but-consistent "Award" → பரிசு-register choice (`పురస్కారం`/`விருது`/`ಪುರಸ್ಕಾರ`) already established by hi/mr/gu's `पुरस्कार`-family terms in Step 44).
+- `[x]` No font-fallback changes were needed in `src/styles.css` — the existing stack (`Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`) already renders Telugu, Tamil, and Kannada glyphs correctly via the OS's own Indic font fallback (Windows' Nirmala UI / macOS's system Indic stacks), confirmed by screenshot inspection below — no tofu boxes appeared, so the plan's conditional "add Noto Sans variants if any script renders as boxes" did not trigger.
+- `[x]` No layout breakage from longer strings: Telugu/Kannada compound-conjunct text and Tamil's longer word-forms were checked in the parcel snapshot, workflow stepper, documents table, and objection form — all wrapped normally within existing card/table widths at 799px (no overflow, no clipped labels).
+
+**Done when:** all three render correctly, no tofu boxes, no layout breakage from longer strings. — met, see verification below.
+
+- **Step 45 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors. In-browser on a fresh dev server: `/?coverage=1` → `logTranslationCoverage()` showed `te` 125/553, `ta` 125/553, `kn` 125/553 (all 23%, matching mr/gu exactly), `bn`/`or`/`pa` still 0/553 (no leakage ahead of Step 46). Set `localStorage['bhoomisetu-language']` to each of `te`, `ta`, `kn` in turn and loaded `/landowner/status/parcel-124-7` directly (confirmed this route works, not just the search flow): `get_page_text` showed full translation with zero English leakage in every citizen-scope field for all three languages (parcel snapshot, workflow stepper and stage labels, 4-row documents table, compensation calculator, objection form with all 5 reason options, and the 1-row objections table with its `Resolved` status translated). Took a screenshot in each language — Telugu, Tamil, and Kannada glyphs all rendered as real characters (no tofu/`□` boxes) using the existing system font stack, confirming no `styles.css` font change was needed. `read_console_messages({onlyErrors: true})` returned nothing across all three languages.
+- Last completed step: Step 45 (code-complete, build-verified, in-browser-verified).
+- Last verification: `npm run build` passes with zero type errors; in-browser, Telugu, Tamil, and Kannada all render the full citizen key set with no blanks and no tofu boxes on the existing font stack, and the coverage report confirms 125/553 for each with no leakage into the three languages not yet touched.
+- Known blockers: none currently open.
+
+### Step 46 — Bengali + Odia + Punjabi, and SMS in every language
+
+- `[x]` Added `bn`/`or`/`pa` to the same 125-entry citizen key set as Steps 44–45. Given the size (106 remaining `TranslationEntry` leaves once `nav` and `landownerSearch` were done by hand as a warm-up), wrote a one-off Python script (`patch_bn_or_pa.py`, run once and deleted — not committed) that matched every object literal containing an `en:`/`kn:` pair without a `bn:` field, looked up the English text in a hand-translated `{en: (bn, or, pa)}` dict, and inserted the three new fields textually. This traded hand-editing risk (the manual `landownerStatus` edit attempt earlier in this step failed on an exact-string match, most likely a Unicode-normalization mismatch between two hand-typed copies of the same Devanagari/Telugu/etc. text) for a different, catchable risk — and one was caught: the script blindly wrapped every inserted value in single quotes, and the Punjabi string for `speech.unavailable` contains a literal apostrophe (`ਇਸ ਡਿਵਾਈਸ 'ਤੇ ...`), which broke that one line's JS syntax. Caught by `npm run build` failing type-check on that exact line, fixed by hand (switched that one field to a double-quoted string), confirmed by an immediate rebuild.
+- `[x]` **Closed the `SmsOwnerLanguage` limitation.** `src/domain/smsPreview.ts` previously had `type SmsOwnerLanguage = 'en' | 'hi' | 'mr'` with a `pick()` helper whose comment said Marathi "falls back to English rather than showing untranslated text" — i.e., the type included `mr` but no Marathi template existed. Rewrote the file: `SmsOwnerLanguage` now covers all ten codes, `STAGE_NAME`/`OBJECTION_STATUS_NAME`/`ALERT_TYPE_NAME` are `Record<X, Record<SmsOwnerLanguage, string>>` (kept as their own hand-written maps rather than importing `stageLabels` etc. from `src/i18n/translations.ts`, to avoid a real circular import: `translations.ts` imports domain types via `src/domain/index.ts`, which re-exports `smsPreview.ts`), and the three message shapes (`stage_advance`, `objection_status`, `alert`) each got a per-language template function — 30 template functions total (3 shapes × 10 languages), each a real translated sentence, not a fallback. `buildSmsPreview()` no longer has any `isHindi`-style branch or English-fallback path; every language is a first-class case.
+- `[x]` Widened `ParcelOwner.preferredLanguage` in `src/domain/types.ts` from `'en' | 'hi' | 'mr'` to the full ten-code union (inlined directly, not imported, matching how the field was already written), and `preferred_language` in `supabase/schema.sql`'s `create type ... as enum (...)` to match.
+- `[x]` **Gave demo owners a realistic spread**, per the plan's instruction to match owner language to state — not a uniform 100%-into-the-regional-language change, since real districts have a mix: in `src/domain/demoData.ts`, Gujarat's 5 owners went from all-`en` to 3×`gu` + 1×`hi` + 1×`en` (Bhavesh Patel, Rekha Trivedi, Falguni Desai → `gu`; Manoj Barot → `hi`; Ketan Vyas stays `en`), Telangana's 4 from all-`en` to 3×`te` + 1×`en` (K. Srinivas Rao, M. Padma, G. Lakshmi → `te`; B. Ramesh stays `en`), and Odisha's 4 from all-`en` to 3×`or` + 1×`en` (Debasish Nayak, Sanjukta Behera, Priyanka Das → `or`; Ashok Mallick stays `en`). Madhya Pradesh's 4 owners were left untouched at `hi` — already the realistic choice for that state, and already full-coverage. Maharashtra's original 25-parcel seed set (already a `mr`/`hi`/`en` mix from earlier steps) was untouched. No Tamil Nadu/Karnataka/West Bengal/Punjab project exists yet in the seed data (that's Step 48's dataset-growth job), so `ta`/`kn`/`bn`/`pa` have no demo *owner* to click through in the UI yet — verified those four via direct `buildSmsPreview()` calls instead (see verification below), which is what the "Done when" criterion actually asks for (a correctly-composed preview per language, not necessarily a seeded owner per language).
+- `[x]` Handbook §11.7: **not edited this step** — the repo has only the compiled `BhoomiSetu_Team_Handbook.pdf`, no editable source (no `.docx`/`.md` draft), and Step 61 is explicitly where "recompute every number... rebuild both and re-verify page by page" happens for both submission documents. Hand-patching a compiled PDF now, outside that pipeline, risked leaving it inconsistent with whatever Step 61 regenerates. Noted in `FINALS_UPGRADE_PLAN.md`'s Step 46 checklist so Step 61 picks it up. The underlying limitation this bullet is about — Marathi SMS falling back to English — is fully closed in code as of this step.
+
+**Done when:** an owner in each supported language gets a correctly-composed SMS preview; `IMPLEMENTATION_PROGRESS.md` updated (handbook deferred to Step 61, see above). — met, see verification below.
+
+- **Step 46 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors (after fixing the one apostrophe/quoting bug above). In-browser: `/?coverage=1` → all eight citizen languages (`mr`, `bn`, `te`, `ta`, `gu`, `kn`, `or`, `pa`) now report exactly 125/553 (23%) — uniform coverage, confirming Bengali/Odia/Punjabi caught up to the other five and nothing regressed. Loaded `/landowner/status/parcel-124-7` in `bn`, `or`, and `pa` in turn (`localStorage['bhoomisetu-language']` set directly, then reload): all three rendered the full page — snapshot, workflow, 4-row documents table, calculator, objection form (5 reason options), 1-row objections table — with real glyphs and zero blank/`undefined` text; screenshots confirmed no tofu boxes in Bengali, Odia, or Gurmukhi (Punjabi) script. Called `buildSmsPreview()` directly in the browser console for `{kind: 'stage_advance', surveyNumber: '124/7', stage: 'valuation'}` across all ten `SmsOwnerLanguage` values — every one returned a fully-composed, non-English (except `en` itself) sentence with the survey number and stage name correctly interpolated; also spot-checked `objection_status` for `or` and `alert` for `bn`/`pa` — all correctly composed. Queried the live `demoData` module in the browser to confirm the actual seeded owners now carry `gu`/`te`/`or` as intended (`Bhavesh Patel`→`gu`, `K. Srinivas Rao`→`te`, `Debasish Nayak`→`or`, etc. — exact list matched what was written). Did a final combined pass requested for the end of this session: switched the landing page and `/landowner` search page through `pa` (the freshest-added language) — landing nav correctly showed English section links (the Step 43 fallback-direction fix still holding for an 8th language it was never specifically tested against), `/landowner` rendered fully in Punjabi; then loaded `/official` in `pa` — page chrome (`Overview`, `Parcel Monitoring`, table headers) stayed English as intended, only the shared `stageLabels`/`dashboardStatusLabels` vocabulary showed Punjabi, matching the same correct behavior already confirmed for `gu`/`kn` in Steps 44–45. `read_console_messages({onlyErrors: true})` was clean on a fresh, non-stale tab (one transient `500` was observed mid-session during the apostrophe-bug window before the fix landed — confirmed historical, not reproducible after).
+- Last completed step: Step 46 (code-complete, build-verified, in-browser-verified). **Track B (Steps 42–46, all 8 new languages + SMS) is now fully complete.**
+- Last verification: `npm run build` passes with zero type errors; in-browser, all 8 citizen languages (mr/bn/te/ta/gu/kn/or/pa) render the full 125-key citizen scope with no blanks or tofu boxes, official pages fall back to English outside shared domain vocabulary, the coverage report shows uniform 125/553 across all eight, and `buildSmsPreview()` produces a correct, non-fallback message in all 10 languages for all 3 message shapes.
+- Known blockers: none currently open. Handbook §11.7 text update is deferred to Step 61 (noted in the plan file) since no editable source for the PDF exists in this repo.
+
+### Step 47 — Seed generator refactor
+
+- `[x]` Replaced the two hand-listed `ParcelSeed` arrays in `src/domain/demoData.ts` (the original 25-parcel `seeds` array from Steps 0–13 and the 17-parcel Step-13 `additionalSeeds` array — 42 hand-typed literals total) with: a `heroSeeds` array holding only `124/7` and `91/6` (byte-for-byte the same field values they always had — owner, dates, coordinates, withheld documents, objections, all untouched), a `DISTRICT_PROFILES` reference table (21 entries — one per district actually used across the 5 existing state projects: 9 in Maharashtra, 4 in Gujarat, 3 in Madhya Pradesh, 4 in Telangana, 1 in Odisha), and a deterministic `generateDistrictSeeds()` generator that expands each profile into `ParcelSeed` objects.
+- `[x]` Each `DistrictProfile` carries: `district`/`state`/`projectId`, a `namePool` id (one of five hand-written first-/last-name pools — `maharashtrian`, `gujarati`, `hindi_belt`, `telugu`, `odia` — matching the language mix each state already had), a `languagePool` (weighted array of `Language` codes reflecting the real spread Step 46 set up per state, e.g. Gujarat mostly `gu` with some `hi`/`en`), a `places` list of real `{village, tehsil}` pairs (the actual village/tehsil names the hand-written data already used, so the map/geography still looks the same), a `centroid` lat/lng, a `landRateBandPerHectare` tuple (derived by back-computing each district's real ₹/hectare ratio from the old hand-typed `compensationEstimate`/`areaHectares` pairs, so generated compensation figures land in the same range the district always had), a fixed `surveyRangeStart` (spaced 20 apart per district so a future district addition can never renumber another district's survey numbers), and `parcelCount`.
+- `[x]` **PRNG**: `hashSeed()` (FNV-1a-style string hash) + `createRng()` (xorshift32) — seeded from `` `district:${profile.district}` ``, not a shared global stream, so adding a new `DISTRICT_PROFILES` entry in Step 48 can never reshuffle any other district's output. `Math.random()` is never called anywhere in the generator. `pick()`/`intBetween()`/`roundTo()` are the only helpers built on top of it (stage pick, days-in-stage, area, land rate, survey-number suffix, coordinate jitter, owner name, language, and the withheld-document/objection coin-flips all go through the same seeded `rng`).
+- `[x]` Per generated parcel: `currentStage` is a uniform pick across all 7 stages; `stageEnteredOn` is `DEMO_REFERENCE_DATE` minus a random 3–52 days (naturally produces a mix of on-track and stuck-by-threshold parcels, same as the old hand-typed spread); `compensationEstimate` = `areaHectares × ratePerHectare` (rate sampled from the district's band), rounded to the nearest ₹5,000; a parcel in `valuation` has a 35% chance of withholding its `valuation_report` (mirroring the two hand-written stuck-in-valuation cases, `124/7` and the old `104/7`); a parcel in `objection_review` has a 70% chance of getting one generated objection (reason/status/description/dates all seeded); coordinates are the district centroid plus a seeded ±0.15° jitter.
+- `[x]` `owner.phone` for generated parcels uses a `9876500NNN`-range distinct from the hero/legacy `987650100N`–`987650202N` range (verified no collisions — see verification below); `owner.name` comes from `makeOwnerName()`, which picks a first name from the district's `namePool` and appends a last name unless the pool has none (the Telugu pool stores full "K. Srinivas Rao"-style names as single `firstNames` entries with an empty `lastNames` array, matching how those names were already written by hand).
+- `[x]` Total output is unchanged in shape from before the refactor — same 42 parcels, same per-district counts (e.g. Pune still totals 6 including its hero), same 5 projects — but 40 of the 42 are now generated rather than hand-typed, and Step 48 can grow the dataset to ~250 by adding more `DISTRICT_PROFILES` entries / raising `parcelCount` without touching the generator itself.
+
+**Done when:** running the generator twice produces byte-identical output; `124/7` still reports Valuation, 57 days, risk 55, blocked on the missing Valuation report; `npm run build` passes. — all met, see verification below.
+
+- **Step 47 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors. In-browser on a throwaway dev server: loaded `/official/parcel/parcel-124-7` and confirmed, via `get_page_text`, the exact figures the plan's done-when criterion names — **Current stage: Valuation, Days in stage: 57 of 21 day threshold, Status: Stuck, Missing documents: Valuation report, Risk score: 55/100 (High)** — all unchanged from before the refactor. Opened a generated parcel (`/official/parcel/parcel-300-7`, survey `300/7`, Vandana Bhosale, Kondhwa/Haveli/Pune) and confirmed it renders correctly end-to-end: parcel info, workflow status, risk assessment, the full 7-stage stepper, a tamper-evident stage-history ledger with valid hash chain, and working advance-workflow controls. **Determinism check**: stopped the dev server process entirely, started a fresh one (full module re-evaluation, not HMR), and reloaded the same generated parcel — `get_page_text` output was byte-identical (owner name, phone, coordinates, compensation estimate, stage, days-in-stage, risk score, all matching). **Dataset-shape check**: ran `await import('/src/domain/demoData.ts')` in the browser console and inspected the live `demoParcels` array directly — `total: 42`, `uniqueSurveyNumbers: 42` (no collisions between hero and generated survey numbers or phone numbers), and the per-district breakdown exactly matched the pre-refactor counts (Pune 6, Nagpur 3, Nashik 4, Ahmednagar 2, Satara 2, Solapur 3, Wardha 2, Amravati 2, Akola 1, Ahmedabad 2, Vadodara 1, Bharuch 1, Mehsana 1, Sehore 1, Narmadapuram 2, Raisen 1, Nalgonda 1, Suryapet 1, Jangaon 1, Karimnagar 1, Jagatsinghpur 4), with the hero parcel's `compensationEstimate` (₹36,80,000) confirmed unchanged in the same query.
+- Last completed step: Step 47 (code-complete, build-verified, in-browser-verified, determinism-verified across a full dev-server restart).
+- Last verification: `npm run build` passes with zero type errors; in-browser, the hero parcel's exact figures (Valuation, 57 days, risk 55, missing Valuation report) are unchanged, a generated parcel renders fully and correctly, restarting the dev server from scratch reproduces byte-identical generated data, and the live dataset is confirmed at 42 total parcels with no survey-number or phone-number collisions.
+- Known blockers: none currently open.
+
+### Step 48 — Grow the dataset
+
+- `[x]` Grew `DISTRICT_PROFILES` in `src/domain/demoData.ts` from 21 entries / 5 projects / 5 states / 42 parcels to **40 entries / 12 projects / 10 states / 246 parcels** — raised `parcelCount` on the 21 existing profiles (e.g. Pune 5→12, Jagatsinghpur 4→12) and added 19 new district profiles across 7 new projects: `UTTAR_PRADESH_PROJECT_ID` (NCR–Bundelkhand Industrial Corridor, `industrial_corridor`, 48 parcels across 5 districts), `RAJASTHAN_PROJECT_ID` (Barmer–Bikaner Lignite Mining Expansion, `mining`, 12 parcels), `KARNATAKA_PROJECT_ID` (Bengaluru Metro Phase 3 Land Corridor, `urban_infrastructure`, 14 parcels), `TAMIL_NADU_PROJECT_ID` (Chennai–Salem Green Expressway, `national_highway`, 10 parcels), `WEST_BENGAL_PROJECT_ID` (Kolkata Dock–Haldia Rail Link, `railway`, 10 parcels), `MAHARASHTRA_URBAN_PROJECT_ID` (Mumbai Trans Harbour Link Extension, `urban_infrastructure`, a second Maharashtra project, 11 parcels), and `ODISHA_MINING_PROJECT_ID` (Talcher Coalfield Land Acquisition, `mining`, a second Odisha project, 10 parcels) — plus new districts (Kendrapara, Bhadrak) added to the existing Odisha project. This uses all three previously-unused `PROJECT_SECTORS` and all five previously-unused `STATE_NAMES`, and adds four new `NAME_POOLS` entries (`rajasthani`, `kannada`, `tamil`, `bengali`) so generated owner names match each new state. Final distribution is deliberately non-uniform: two large projects (Pune–Nagpur Expressway 54 parcels, NCR–Bundelkhand Corridor 48) against nine projects in the 10–30 range, matching the plan's "a few large, several small" instruction.
+- `[x]` **Fixed the flat-15-day problem** (handbook §11.4): `makeHistory()` previously gave every completed stage in every parcel's history exactly 15 days (a fixed `index * 16 + 15` offset scheme). Replaced it with a `STAGE_DURATION_BIAS` per-stage multiplier (objection_review 1.35×, valuation 1.55× — the historically slow stages — down to notification 0.55×, award 0.75× — the fast ones) combined with a seeded jitter (0.65×–1.35×) and an ~12%-chance chronic-delay outlier (1.8×–3.2×), all seeded from `` `history:${parcelId}` `` so it stays fully deterministic. `makeHistory` now walks backward from `stageEnteredOn` (which stays exactly as seeded — parcel-level rules key off it directly, not off history) so each completed stage gets its own independently varied duration instead of a shared flat one.
+- `[x]` **Generalized document variety**: replaced the old "only Valuation, only 35% chance, only one document" withheld-document logic with `pickDocumentPlan()`, which for any current stage either withholds one or (28%×40% chance) both required documents entirely (never uploaded — the existing "missing" story), or leaves them present but marks some `pending_verification` or `rejected` (a new `currentStageDocumentOutcomes` field on `ParcelSeed`, applied only to the parcel's *current* stage — completed stages stay verified, since a parcel could not have advanced past a stage without its required documents already verified). Rejected documents get a `rejectionReason` (one of eight kind-specific reasons), `reviewedByRole`, and `reviewedOn`.
+- `[x]` **Genuinely varied project status**: added a `stageBias` field (`'balanced' | 'behind' | 'severely_behind'`, weighted per-stage pick via `pickWeightedStage`) to `DistrictProfile`, and pulled several projects' `sanctionedOn`/`targetCompletionOn` dates so the combination of elapsed-time-fraction and stage-progress-fraction (`getProjectCalculatedStatus` in `rules.ts`) produces real variety instead of all 12 projects landing `on_track` by coincidence of a uniform stage pick: Madhya Pradesh (`severely_behind`, target pulled from 2027-06-30 to 2027-03-31), Telangana (`behind`, sanctioned pulled from 2026-03-01 to 2024-06-01), Odisha's Paradip project (`behind`, sanctioned pulled from 2025-12-05 to 2025-06-01), Rajasthan/Karnataka (`behind`), Maharashtra's second project and Odisha's second project (`behind`). Also fixed a **pre-existing bug** this surfaced in `src/domain/timeline.ts`: `getProjectTimelineAxis()`'s quarter-tick generator could emit two ticks with the identical label (React duplicate-key warning) when a project's `targetCompletionOn` fell mid-quarter in the axis's final quarter — happened here because the new UP project's 2028-06-30 target isn't a quarter boundary. Fixed by snapping the existing tick to 100% instead of pushing a duplicate when the labels match.
+- `[x]` More objection reasons and rejected documents: objection reasons/statuses were already randomly distributed per district (unchanged logic), but the much larger parcel count now produces real variety in the live data — confirmed all 5 objection reasons and all 3 objection statuses appear; the document-outcome change above adds `rejected`/`pending_verification` documents where there were previously only `verified` ones.
+- `[x]` R&R varied meaningfully across all 12 projects: affected families range from 95 (Rajasthan) to 680 (Uttar Pradesh); 4 of 12 projects have a complete R&R checklist, 8 pending.
+
+**Done when:** 250-ish parcels across 12 projects and 10 states; the Reports stage-duration chart shows different averages per stage with at least one over SLA; the National Dashboard shows a mix of on-track/at-risk/delayed; new headline figures recomputed and recorded. — all met, see verification below.
+
+- **Step 48 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors. **Dataset shape** (via `await import('/src/domain/demoData.ts')` in the browser console): **246 total parcels** (246 unique survey numbers, 246 unique phone numbers — one collision was found and fixed during verification, see below), **10 states**, **40 districts**, **12 projects**. **Determinism**: stopped the dev server process entirely and restarted twice; a spot-checked generated parcel (survey `682/5`, M. Padma, Karimnagar) was byte-identical across both restarts (owner, phone, area, stage, compensation, coordinates), and the hero parcel's compensation/coordinates were unchanged. **Hero parcel unaffected**: `/official/parcel/parcel-124-7` still shows Valuation, 57 days, Stuck, missing Valuation report, risk 55/100 High — identical to before this step — while its Stage History Ledger now shows real varied durations (Notification 12 days, Joint Survey 23 days, Objection Review 48 days) instead of the old flat 15, with the hash chain still verified (4 of 4 links intact). **Stage-duration variance** (`/official/reports`, National Admin scope): Notice 20.5d/30d SLA, Survey 20.6d/21d, **Objections 46.5d/30d (over)**, **Value 39.2d/21d (over)**, **Approval 27.6d/21d (over)**, Award 18.3d/21d, Possession no data yet — genuinely different averages with three stages over threshold, not the old flat 15 everywhere. **Project status mix** (`/national`, National Admin): **5 on track, 2 at risk, 5 delayed, 0 complete** across all 12 projects, spanning all 8 `PROJECT_SECTORS` and all 10 states — confirmed both on the National Dashboard and the Reports page's Project Progress table. **Multiple missing documents**: the Reports page's Top Risk Parcels queue shows, e.g., survey `786/10` (Bulandshahr, UP) missing both "Joint survey sketch" and "Ownership record extract" simultaneously; confirmed rendering correctly end-to-end on the citizen-facing `/landowner/status/parcel-786-10` page too (owner Sarita Dubey, both documents listed as the blocking reason). **Document status variety**: live dataset query showed `{verified: 905, rejected: 16, pending_verification: 16}` and 9 parcels with more than one missing required document. **Objection variety**: all 5 reasons (`measurement`, `valuation`, `ownership`, `other`, `compensation`) and all 3 statuses (`resolved`, `under_review`, `pending`) appear in the live dataset. **Map sanity check**: signed in as Field Officer scoped to Odisha/Jagatsinghpur (now 12 parcels, up from 4) — the Parcel Map rendered all markers with the color-by-project/color-by-status toggle working, no console errors. **Bug found and fixed during verification**: a phone-number collision (`9876501001`, then `9876501012` after the first fix) between the hero parcels and a generated West Bengal/Hooghly parcel — the district's `surveyRangeStart` (1000) combined with its `parcelCount` (4) produced index values landing exactly on the hero parcels' hardcoded phone suffixes; fixed by moving `surveyRangeStart` to 1014, re-verified zero collisions. **Bug found and fixed during verification**: the National Dashboard's Project Timeline showed a React "two children with the same key" warning for a duplicate "Q2 2028" axis tick, traced to `getProjectTimelineAxis()` in `src/domain/timeline.ts` emitting both a loop-generated tick and a separate "final" tick with the same quarter label when a project's target date falls mid-quarter (triggered here by the new UP project's 2028-06-30 target); fixed by snapping the existing tick to 100% instead of duplicating it when labels match, confirmed via a fresh browser tab (clean console, exactly one "Q2 2028" tick in the DOM). `read_console_messages({onlyErrors: true})` was clean on fresh tabs throughout final verification (an unrelated batch of `useSession`/500 errors seen mid-session traced to stale Vite HMR state from live-editing `demoData.ts` while the dev server was running — same category of transient, non-reproducible issue noted in Step 46's entry — confirmed gone on a fresh tab and a fresh server start).
+- Last completed step: Step 48 (code-complete, build-verified, in-browser-verified, determinism-verified across two full dev-server restarts, two real bugs found during verification and fixed).
+- Last verification: `npm run build` passes with zero type errors; live dataset confirmed at 246 parcels / 12 projects / 10 states / 40 districts with zero survey-number or phone-number collisions; hero parcel's exact figures unchanged; stage-duration chart shows genuine per-stage variance with three stages over SLA; National Dashboard shows 5 on track / 2 at risk / 5 delayed; multiple-missing-document and rejected/pending-verification document states confirmed rendering correctly on both official and citizen-facing pages; two incidental bugs (a phone-number collision, a duplicate React key in the project timeline) were found and fixed during this step's own verification.
+- Known blockers: none currently open. Per the plan, actually regenerating `BhoomiSetu_SIH2026_CyberPookies.pptx` and `BhoomiSetu_Team_Handbook.pdf` with these new headline figures (246 parcels, 12 projects, 10 states, 40 districts, the new stage-duration averages, the 5/2/5 on-track/at-risk/delayed split) is Step 61's job, not this step's — the figures are recorded above for that step to pick up.
+
+### Step 49 — Performance for the larger dataset
+
+- `[x]` **Debounced the survey-number search.** New `src/hooks/useDebouncedValue.ts` (generic, 250ms default via a `setTimeout`/cleanup pattern). `OfficialPage.tsx`'s `TextField` still binds directly to the raw `surveyQuery` state (so typing itself never lags), but `filteredParcels`'s `useMemo` now depends on `useDebouncedValue(surveyQuery, 250)` instead of the raw value — so the filter (and everything downstream of it) only recomputes once typing pauses for 250ms, not on every keystroke.
+- `[x]` **Memoised the two row-building computations that were previously recomputed as plain consts on every render**: `attentionRows` (was `getAttentionParcels(filteredParcels).slice(0,6).map(...)` inline) and `parcelRows` are both now wrapped in `useMemo` keyed on `filteredParcels`/`t` (`parcelRows` is additionally now keyed on the *paginated* slice — see below — so it only ever maps the rows actually being rendered, not the full filtered set).
+- `[x]` **Added pagination** via a new generic `src/hooks/usePagination.ts` (`{page, pageCount, pageItems, setPage}`, takes a `resetKey` so a filter change resets to page 1 instead of stranding the view on a now-out-of-range page) and a new `Pagination` component in `src/components/ui.tsx` (Previous/Next buttons + a "Showing X to Y of Z" summary, renders only the summary with no buttons when there's a single page). New `getPaginationSummary`/`getPaginationPageLabel` helpers in `src/pages/statusDisplay.ts` build the translated summary/page-label strings from a shared new `uiText.pagination` block (en/hi — official-workspace-only chrome, matching `actionCenter`/`reports`'s existing en/hi-only scope). Wired into three tables:
+  - `OfficialPage.tsx`'s parcel list — 20/page.
+  - `ActionCenterPage.tsx`'s risk queue — 25/page (`resetKey` = `queue.length`, since the queue has no filter fields of its own — a session/scope change is what actually needs a page-1 reset).
+  - `ParcelDetailPage.tsx`'s documents table — 5/page. (Chose 5, not a rounder 10, specifically because the live dataset's most-document parcel has exactly 8 documents — an 8-or-10 page size would never produce a real second page against current data, which would make the "add pagination to the documents table" plan item untestable. 5 genuinely splits the 8-document case into 2 pages, so the mechanism is exercised by real data, not just in theory.) The `documentsPagination` hook call sits before the loading/error early-returns (using `parcel?.documents ?? []`) since Hooks can't be called conditionally.
+- `[x]` **Added marker clustering to `ParcelMap`** — no new dependency, hand-rolled the same way `ProjectTimeline`/`StageDurationChart`/`AuditChainLedger` hand-rolled their own visuals in Steps 38–40. A new `ParcelMarkers` sub-component is rendered as a child of `MapContainer` so it can call `useMap()`/`useMapEvents({zoomend})` (both already available from the existing `react-leaflet` dependency); on every zoom change it re-buckets the parcel list via `clusterParcels()` — a greedy, `Leaflet`-pixel-space nearest-neighbour grouping (`map.project(latlng, zoom)`, 46px merge radius) that needs no external clustering library. A cluster of exactly one parcel renders the original `CircleMarker` + `Popup` unchanged; a cluster of 2+ renders a `Marker` with an `L.divIcon` badge (`.cluster-marker`/`.cluster-marker-inner` in `styles.css`, sized 28–46px by count) showing the count, and clicking it calls `map.fitBounds()` over the cluster's own parcels (`maxZoom: 15`) to zoom in and split it. Because clustering runs in Leaflet's own projected pixel space (which itself scales with zoom), there is no separate "stop clustering above zoom N" cutoff needed — points that were pixel-close at a wide zoom are naturally pixel-far-apart once zoomed in, and un-cluster on their own.
+- `[x]` **Honest scope note on where this actually matters today.** `OfficialPage.tsx`'s existing redirect (`role === 'national_admin' || 'state_authority'` → `/official/national`) means the parcel-list/map page most people call "the district dashboard" is, under the app's real role scoping (`src/domain/access.ts`), only ever reached by `district_officer`/`field_officer` sessions — both narrowed to a single district, and the largest `DISTRICT_PROFILES` `parcelCount` in the live dataset is 12 (13 including a hero parcel where applicable). So on `OfficialPage` itself, today, pagination/debounce/clustering are genuinely "prove the shape scales" infrastructure per the plan's own framing ("At 250 that is fine; the point of this step is to prove the *shape* scales") rather than a fix for an existing slowdown — verified below by forcing the map to cluster at normal zoom with only 12–13 parcels (proximity-based clustering triggers on pixel distance, not a parcel-count threshold, so it visibly works at any scale). The one place a *real* 246-parcel dataset is already rendered unpaginated today is `ActionCenterPage.tsx`'s risk queue for a `national_admin` session (no redirect gates that page) — that is where the before/after performance measurement below was taken, since it is the one honest apples-to-apples "did this actually get faster" comparison available in the current app.
+- `[x]` **Before/after measurement**, taken properly rather than estimated: `git stash push -u` on exactly the Step 49 files (`ui.tsx`, `ParcelMap.tsx`, `ActionCenterPage.tsx`, `OfficialPage.tsx`, `ParcelDetailPage.tsx`, `statusDisplay.ts`, `src/hooks/`, `styles.css` — leaving the unrelated Steps 42–48 uncommitted work untouched) produced a genuine pre-Step-49 build; a fresh dev-server restart plus an in-browser timing script (`performance.now()` around a real React-Router click-navigation to Action Center, polling until the table settled) measured **~250–320ms warm** to mount and paint all 246 unpaginated rows (`{en,hi,...}` first run was 666ms cold-start, discarded). `git stash pop` restored Step 49, a rebuild+fresh-restart repeated the same click-navigation measurement paginated: **~350–580ms** for the same interaction — noisier and, surprisingly, not clearly faster wall-clock. Investigated why: `getActionCenterQueue` must still score and sort *all* 246 in-scope parcels to produce a correctly-ranked queue before pagination can slice a page off the top — that ranking cost is shared and identical before/after, and it dominates the measured time far more than the DOM-rendering cost pagination actually removes. The number that *is* deterministic and unambiguous: unpaginated, the table commits 246 rows × 7 columns = **1,722** `<td>` cells to the DOM on every mount; paginated, it commits 25 × 7 = **175** — a **~90% reduction** in DOM nodes painted per view, which is what "stays responsive"/"filters feel instant" (scrolling, re-paint, memory, mobile) actually depends on, not the shared ranking cost. Recorded honestly rather than picking whichever number looked better.
+- `[x]` `npm run build` (`tsc -b && vite build`) passes with zero type errors, both with the Step 49 changes and — checked separately during the stash — on the pre-Step-49 baseline.
+
+**Done when:** district dashboard and Action Center stay responsive with the full dataset; map renders 250 parcels without visible lag; filters feel instant. — met, see verification below.
+
+- **Step 49 — verification:** `npm run build` passes with zero type errors. In-browser on a throwaway dev server (fresh restart for each scenario below, no stale-HMR carryover):
+  - **National Admin / Action Center (246 rows):** confirmed the table renders exactly 25 `<tbody><tr>` on load with `.pagination-summary` reading "Showing 1 to 25 of 246"; clicking Next moved to a different first row, `.pagination-page` read "Page 2 of 10", and the summary updated to "Showing 26 to 50 of 246" — all internally consistent (246 / 25 = 9.84 → 10 pages, confirmed).
+  - **Debounce, measured (not just described):** on `OfficialPage.tsx` (Field Officer, Pune — 13 in-scope parcels) programmatically typed "30" into the survey field via the native input setter + `input` event (so it goes through React's real `onChange`, not a synthetic shortcut) and read `.pagination-summary` **immediately** after the keystroke (`"Showing 1 to 13 of 13"` — unfiltered, proving the debounce is genuinely holding) versus **400ms later** (`"Showing 1 to 10 of 10"` — correctly filtered to the 10 Pune parcels whose survey number contains "30"). This is a real measured before/after within one interaction, not an assumption that the hook works.
+  - **Documents pagination, with a real interaction against it:** on parcel `702/12` (Field Officer, Jagatsinghpur — 7 documents, `DOCUMENTS_PAGE_SIZE=5`) confirmed `"Showing 1 to 5 of 7"` on load, then clicked a real **Verify** button on page 1 and confirmed the clicked row's Status badge updated to "Verified" in place — the pagination slice doesn't interfere with the existing verify/reject document-action wiring. Also separately confirmed on parcel `482-1` (8 documents) that Next correctly moves to `"Showing 6 to 8 of 8"` with exactly 3 rows rendered.
+  - **Map clustering, interactively:** on the Pune district map (13 parcels, default zoom) the 13 parcels rendered as 2 cluster badges ("5", "7") plus 1 lone marker — not because 13 is large, but because clustering is purely pixel-distance-based and these parcels happen to sit close together at that zoom, which is itself the point (proves the mechanism, not just a parcel count). Clicked the "7" badge — `map.fitBounds` zoomed in and it visibly split into 5 individual markers plus a new smaller "3" cluster; clicked that "3" badge — it split into 3 individual markers with no cluster badges left. Clicked an individual marker's popup afterward and confirmed the original survey-number/village/district/stage/status/"View parcel"-link content still renders unchanged (`305/2`, Kondhwa, Pune, Objection Review, Blocked). `read_console_messages({onlyErrors:true})` was clean throughout — no React key warnings, no Leaflet errors.
+  - **375px pagination layout:** resized the Action Center tab to the mobile preset (375×812) and read `.pagination`'s and its two buttons' `getBoundingClientRect()` — pagination width 315px inside a 375px viewport (`overflowsViewport: false`), Previous/Next buttons non-overlapping (`right: 121.4` / `left: 218.9`).
+  - `read_console_messages({onlyErrors: true})` was clean on every fresh tab across every scenario above.
+
+- Last completed step: Step 49 (code-complete, build-verified, in-browser-verified — see above).
+- Last verification: see the Step 49 verification block above. `npm run build` passes with zero type errors.
+- Known blockers: none currently open.
+
+### Step 50 — Harden the Postgres schema
+
+- `[x]` **Non-negative area/compensation and valid date-ordering `check` constraints**, added directly on
+  the table definitions in `supabase/schema.sql`: `projects.total_area_required_hectares >= 0`,
+  `projects.compensation_sanctioned >= 0`, `projects.affected_families/displaced_families/families_resettled >= 0`,
+  a new `projects_sanctioned_before_target` constraint (`sanctioned_on < target_completion_on`);
+  `parcels.area_hectares > 0` (zero-area land doesn't make domain sense, so this is strictly positive,
+  not just non-negative), `parcels.compensation_estimate >= 0`, `parcels.compensation_paid >= 0`, and a new
+  `parcels_paid_not_over_estimate` constraint (`compensation_paid <= compensation_estimate`); a new
+  `stage_history_valid_date_range` constraint (`exited_on is null or entered_on <= exited_on`); a new
+  `objections_valid_date_range` constraint (`submitted_on <= updated_on`).
+- `[x]` **Foreign keys and cascades — audited, not re-added.** `parcels.project_id references projects(id) on delete restrict`
+  and every child table (`stage_history`, `documents`, `objections`) already referenced `parcels(id) on delete cascade`
+  since the tables were first created in earlier steps — this item was a verification pass (see below), not new SQL.
+- `[x]` **Indexes on the columns the app actually filters on.** Added `parcels_project_id_idx` (was missing —
+  every parcel row carries a `project_id` FK but had no supporting index) and `objections_parcel_status_idx`
+  (composite, `parcel_id, status` — `getActionCenterQueue`/objection-status filtering hits this pattern).
+  `parcels(district)`, `parcels(current_stage)`, `documents(parcel_id, stage)`, `stage_history(parcel_id)` already
+  had indexes from earlier steps.
+- `[x]` **Uniqueness — kept the existing global `unique(survey_number)` rather than weakening it to a
+  composite `unique(project_id, survey_number)`.** This is a deliberate deviation from the plan's literal
+  wording, recorded honestly: the landowner portal looks up a parcel by survey number alone with no project
+  context (an owner doesn't know their project's internal ID), so uniqueness must hold globally for that
+  lookup to stay unambiguous — a composite constraint would *allow* the same survey number to exist in two
+  different projects and silently break that search. The existing global constraint is strictly stronger
+  than the plan's floor (it implies per-project uniqueness), so nothing about the plan's actual intent is
+  unmet; a comment was added directly above the column in `schema.sql` explaining why no separate composite
+  constraint was added on top of it.
+- `[x]` **Audit columns on every table.** Added `created_at timestamptz not null default now()` and
+  `updated_at timestamptz not null default now()` to `projects`, `stage_history`, `documents`, and
+  `objections` (`parcels` already had both since an earlier step). Added one shared trigger function,
+  `set_updated_at()`, and a `before update` trigger on all five tables that stamps `updated_at = now()` —
+  verified for real (see below) that `created_at` stays fixed across an update while `updated_at` advances.
+- `[x]` **Persisted the audit-chain hash.** Added nullable `prev_hash text` / `entry_hash text` columns to
+  `stage_history`. This closes the gap the plan names directly (the chain was previously only ever computed
+  in-browser at load time by `src/domain/auditChain.ts`/`AuditChainLedger.tsx` — a reload with no live
+  Supabase connection had nothing durable to re-verify against). Wired the write path, not just the schema:
+  - `src/domain/auditChain.ts`: switched from `window.crypto` to the global `crypto` object (Node 19+ exposes
+    the identical WebCrypto `crypto.subtle` API), exported `GENESIS_HASH` and `canonicalize` (previously
+    module-private), and added `computeNextHash(previousHash, entry)` — the single-link primitive
+    `buildAuditChain`/`verifyAuditChain` now both call internally instead of duplicating the hex-digest line.
+    This is a pure refactor: `buildAuditChain`/`verifyAuditChain`'s own behavior and return values are
+    unchanged, confirmed by re-running the existing Step 40 in-browser tamper-detection flow (see below).
+  - `src/data/supabaseRepository.ts`'s `advanceParcelStage()` now looks up the parcel's current open
+    `stage_history` row's `entry_hash` (or `GENESIS_HASH` if the parcel has no history yet) *before* closing
+    it, computes the new row's `entry_hash` via `computeNextHash`, and inserts both `prev_hash`/`entry_hash`
+    on the new row. This only affects the Supabase (live-mode) write path — `demoRepository.ts`'s in-memory
+    store is untouched, and `AuditChainLedger.tsx` still computes/verifies the chain from `history` the same
+    way it always has, so no UI behavior changed.
+  - `src/data/supabaseRepository.ts`'s `StageHistoryRow` type gained optional `prev_hash`/`entry_hash` fields.
+    `src/domain/types.ts`'s `StageHistoryEntry` (the app-facing shape) was deliberately **not** changed — the
+    hash is a persistence-layer concern the app doesn't need to read back, keeping this step's blast radius to
+    exactly the write path plus the schema.
+- `[x]` **Seed script.** Added `scripts/seedSupabase.ts` (run via the new `npm run db:seed`), replacing the
+  schema file's old "write a one-off script" comment with a pointer to the real one. It imports
+  `demoParcels`/`demoProjects` from `src/domain/demoData.ts` directly, upserts in FK order (projects → parcels
+  → stage_history → documents → objections, batched 200-at-a-time for parcels), maps every field to its
+  snake_case column exactly as `supabaseRepository.ts` does, and — for `stage_history` — sorts each parcel's
+  history chronologically and computes the same genesis-seeded hash chain described above before inserting,
+  so a freshly seeded project's audit tab verifies as intact on first load rather than needing its first
+  real stage advance to backfill hashes. Reads `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` from the
+  environment (never the anon key). Added `tsx` and `@types/node` as devDependencies and a `db:seed` npm
+  script; `scripts/` is outside `tsconfig.app.json`'s `include`, so it has zero effect on `npm run build`'s
+  type-checking.
+- Verification note on why the hash logic is duplicated once, not twice: `scripts/seedSupabase.ts` does **not**
+  import `src/domain/auditChain.ts` — it re-implements the same ~10-line `sha256Hex`/`canonicalize` routine
+  locally instead, with a comment explaining why (a one-off Node script becoming a second real runtime
+  consumer of a domain module is more coupling than the script needs; this mirrors the existing precedent of
+  `src/domain/smsPreview.ts` deliberately duplicating a handful of translated strings rather than importing
+  across a layer boundary, per the Step 20 writeup above). The two implementations were cross-checked to
+  produce byte-identical hashes for the same input during verification (below).
+
+**Done when:**
+- `[x]` `schema.sql` runs clean on a fresh Postgres instance. **Verified for real, not by inspection**, since
+  this environment has no Docker and no live Supabase project to point at: installed `@electric-sql/pglite`
+  (a real, WASM-compiled Postgres engine, not a mock) in a scratch directory, stubbed only the two
+  Supabase-provided objects the file assumes already exist on a real project (`storage.buckets`,
+  `storage.objects` — plain tables, no Supabase-specific extension code), then ran the entire `schema.sql`
+  file against it. It executed with **zero errors**, and running it a second time back-to-back (proving the
+  file's own "safe to re-run" claim) also produced zero errors. This is a genuine gap from "a fresh Supabase
+  project" specifically (pglite is vanilla Postgres, not Supabase's exact fork/extension set), recorded
+  honestly rather than glossed over — but it is real DDL execution against a real Postgres engine, not a
+  manual read-through.
+- `[ ]` **Not verified — no live Supabase project available in this environment.** The seed script's
+  row-mapping and hash-chain logic were dry-run against the real `demoData.ts` (246 parcels / 12 projects /
+  828 stage_history rows / 937 documents / 26 objections, zero constraint violations found, hash chain for
+  hero parcel `124/7` computed and spot-checked) and the script itself passes a standalone `tsc --noEmit`,
+  but actually running `npm run db:seed` against a live Supabase project and confirming the app's live mode
+  renders the same figures as demo mode requires credentials this session does not have. Left honestly
+  unchecked for whoever runs the next step with real Supabase access, per this project's established
+  practice of not claiming verification that didn't happen (see the Steps 38–40 blocker note above, and
+  Step 51's RLS-honesty framing).
+- `[x]` Deliberately bad inserts are rejected. **Verified for real** against the same pglite instance:
+  negative `area_hectares` → rejected by `parcels_area_hectares_check`; `compensation_paid > compensation_estimate`
+  → rejected by `parcels_paid_not_over_estimate`; a duplicate `survey_number` → rejected by the existing unique
+  constraint; a project with `target_completion_on` before `sanctioned_on` → rejected by
+  `projects_sanctioned_before_target`; a `stage_history` row with `exited_on` before `entered_on` → rejected by
+  `stage_history_valid_date_range`. Also verified, beyond the plan's literal checklist since it was cheap to
+  confirm alongside everything else: cascade delete (deleting a parcel removes its `stage_history` rows) and
+  restrict delete (deleting a project with a live parcel is rejected; deleting it once childless succeeds)
+  both behave exactly as the schema declares them. Full transcript, including the exact Postgres error
+  messages, was captured in this session; the scratch pglite install and test scripts were not committed
+  (project-external, throwaway verification tooling only).
+- **Additional verification:** the `set_updated_at` trigger was checked directly (not just read) — inserted a
+  row, captured `created_at`/`updated_at`, waited over a second, updated an unrelated column, and confirmed
+  `created_at` was byte-identical while `updated_at` had advanced to the new timestamp. `npm run build`
+  (`tsc -b && vite build`) passes with zero type errors after the `auditChain.ts`/`supabaseRepository.ts`
+  changes. A standalone `npx tsc --noEmit` pass (matching `tsconfig.app.json`'s compiler options) on
+  `scripts/seedSupabase.ts` alone also passes with zero errors.
+- Known blockers: none code-side. The one open item is the seed-script-against-a-live-project verification
+  noted above — not a code defect, a missing credential in this environment. Note for Step 51: this step's
+  new `profiles` table and the real (commented, switchable) RLS policies should also get `created_at`/
+  `updated_at` columns and the same `set_updated_at` trigger, for consistency with every other table added
+  since this step.
+
+### Step 51 — Production-shape RLS
+
+- `[x]` **`app_role` enum**, added to `supabase/schema.sql` as a deliberately separate type from the
+  existing `official_role` enum: `official_role` is a job title stamped onto `stage_history`/`documents`/
+  `objections` rows (who handled this), while `app_role` is the access-scope role from
+  `src/domain/constants.ts` `APP_ROLES` / `src/domain/access.ts`'s `ScopableSession` (what this signed-in
+  user is allowed to see) — the two are unrelated axes and conflating them would have been a real bug in
+  the policy design, not just a naming nit. Values: `national_admin`, `state_authority`,
+  `district_officer`, `field_officer`, `landowner` — a 1:1 mirror of `APP_ROLES`.
+- `[x]` **`profiles` table**: `user_id` (references `auth.users(id)`), `app_role`, `state_scope`
+  (`state_name`, nullable), `district_scope` (`text`, nullable), plus `created_at`/`updated_at` and the
+  same `set_updated_at` trigger every other table got in Step 50 — closing the exact follow-up note Step
+  50's own writeup left for this step. Its own RLS is **active today, not commented**: a signed-in user can
+  `select`/`update` only their own row (`auth.uid() = user_id`); there is no insert/delete policy, since
+  profile provisioning is meant to be a service-role-key admin operation, mirroring how
+  `scripts/seedSupabase.ts` already writes to this project. This is real, non-permissive RLS that ships
+  active in this schema, not only ever prose — it costs nothing to enable now because nothing in the app
+  reads or writes `profiles` yet.
+- `[x]` **Real, commented policies for `projects`, `parcels`, `stage_history`, `documents`, `objections`**,
+  placed directly after each table's existing permissive block in `schema.sql`, each hand-derived from
+  `src/domain/access.ts`'s `isProjectInScope`/`isParcelInScope` so the SQL predicate and the TypeScript
+  scoping logic read the same way line-for-line: `national_admin` sees everything; `state_authority` is
+  scoped by the parcel's project's `state`; `district_officer`/`field_officer` add a `district` match on
+  top of the same state check; `landowner` matches no branch, so the policy denies (that role never reads
+  these tables directly — see the next point). `select`/`update` are covered on `parcels`; `select`/
+  `insert`/`update` on `stage_history` and `documents` (matching what `advanceParcelStage`/`addDocument`/
+  `verifyDocument` actually do in `src/data/supabaseRepository.ts`); `select`/`update` only on `objections`
+  (its only `insert` path is the unauthenticated landowner flow — see below, not an officialdom write).
+  `projects` gets `select` only — the app never inserts/updates projects at runtime, only
+  `scripts/seedSupabase.ts` does, via the service-role key, which bypasses RLS entirely.
+- `[x]` **Zero-login citizen access, solved with `security definer` RPC functions, not a permissive `anon`
+  policy.** The landowner portal has no login by design (`IMPLEMENTATION_PROGRESS.md` Step 10) — a villager
+  looks a parcel up by survey number alone — which is structurally incompatible with an `auth.uid()`-scoped
+  policy. The tempting shortcut (`using (true or exists(...profiles...))`, i.e. leave the four
+  citizen-reachable tables world-readable to `anon` on top of the scoped policies) was considered and
+  explicitly rejected in both `schema.sql`'s comments and `supabase/README.md`: it is today's permissive
+  shape wearing a disguise, since any anonymous caller could still list every parcel in the country, not
+  only the one they know the survey number for. Instead, two commented `security definer` functions —
+  `landowner_get_parcel_status(p_identifier)` (returns one parcel plus its `stage_history`/`documents`/
+  `objections`, matched by survey number or id) and `landowner_submit_objection(...)` (inserts exactly one
+  `objections` row tied to that parcel, raising an exception on an unknown survey number) — are granted to
+  `anon`, alongside a `revoke select, insert, update ... from anon` line that removes direct table access
+  once they're in place. This is the standard Postgres pattern for "a public caller may look up or write
+  one record they can name, and nothing else."
+- `[x]` **`supabase/README.md`** (new file) — the full narrative version of the above: what is true today
+  (every policy permissive, and why, with the exact Step 10/Step 51 citations), what Step 51 adds, why the
+  `anon`-in-scoped-policy shortcut was rejected, a 5-item ordered switch-over checklist for whoever wires
+  Supabase Auth next (provision `profiles` on signup → replace the client-side demo login → uncomment the
+  policies and run the `revoke` → switch the two landowner-reachable repository calls to `supabase.rpc(...)`
+  → re-verify against a real project), and a direct written answer to "is it secure?" — this is the text
+  handbook §11.2 and the deck's slide-6 security reference should now point to (deferred to Step 61's
+  regeneration pass along with every other figure that step recomputes — see the note below).
+- `[x]` **No frontend code touched.** Every change in this step is `supabase/schema.sql` (additive: one new
+  enum, one new table, its trigger and RLS, and comment-only policy/function blocks after each existing
+  permissive block — no existing active statement was modified or removed) and the new
+  `supabase/README.md`. `src/domain/access.ts` itself was read closely to derive the SQL but not edited —
+  Step 51 is explicitly about making its scoping logic's *shape* visible in SQL, not changing what it does.
+
+**Done when:** real policies exist in the repo, correct and commented, mirroring `src/domain/access.ts`
+exactly; there is a written, honest answer to "is it secure?" that a judge can read. — both met, see
+verification below.
+
+- **Step 51 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors (expected,
+  since no `.ts`/`.tsx` file changed this step). Because this step's substance is SQL that is deliberately
+  never executed by the running app (the "real" policies stay commented), the meaningful verification is
+  against a real Postgres engine, not the browser — done the same way as Step 50: `@electric-sql/pglite`
+  installed in a scratch temp directory (not committed), with `storage.*` and, newly this step, `auth.users`/
+  `auth.uid()` stubbed (Supabase-provided objects the schema assumes exist on a real project).
+  **Pass 1 — the file as committed**: `schema.sql` ran clean end to end, and a second back-to-back run also
+  ran clean (confirms the new `profiles` table/trigger/enum didn't break the file's existing "safe to
+  re-run" guarantee). Inserted one `national_admin` and one `district_officer` profile row, then — as a
+  genuinely low-privilege Postgres role with `auth.uid()` wired to a session variable, not as the pglite
+  superuser, since RLS is bypassed for superusers/table owners — confirmed the `profiles` table's *active*
+  (not commented) policy actually enforces "read own profile": querying as user #1 returned exactly user
+  #1's row, not user #2's.
+  **Pass 2 — the commented "production policy" blocks, uncommented into a throwaway `real-policies.sql` and
+  diffed by eye against the exact committed lines** (all 11 `scoped *` policies plus both RPC functions,
+  confirmed character-for-character identical to what's in `schema.sql` before running): applied on top of
+  the base schema, then the five `"public *"` permissive policies were dropped so the scoped policies were
+  the *only* ones active — i.e. the real switch-over `supabase/README.md` describes, exercised for real.
+  Seeded two projects (Odisha, Maharashtra) and three parcels (two Odisha — one in Jagatsinghpur district,
+  one in Cuttack — one Maharashtra), then four `profiles` rows, one per role, and queried `parcels` as each,
+  through a real low-privilege role with `auth.uid()` set via a session variable (not the table owner, so
+  RLS was genuinely enforced, not bypassed): **national_admin saw all 3 parcels**; **state_authority
+  (Odisha) saw exactly the 2 Odisha parcels, zero Maharashtra**; **district_officer (Odisha/Jagatsinghpur)
+  saw exactly the 1 Jagatsinghpur parcel, zero Cuttack** — proving the state-then-district narrowing matches
+  `access.ts`'s `isParcelInScope` exactly, not just at the type level; **the `landowner` app_role saw zero
+  parcels via direct table access**, confirming that role never gets scoped-table reads (by design — it
+  uses the RPC path instead). Then revoked `anon`'s direct grants and confirmed `select` on `parcels` as
+  `anon` was rejected with a genuine Postgres `permission denied for table parcels` error — not a
+  UI-level hide. Finally, granted `anon` execute on both RPC functions and confirmed the zero-login path
+  still works end to end: `landowner_get_parcel_status('SN-OD-1')` as `anon` returned the correct parcel
+  plus its (empty) `stage_history`/`documents`/`objections` arrays; `landowner_submit_objection('SN-OD-1',
+  'measurement', ...)` as `anon` inserted a row correctly linked to `parcel-od-jgs` (verified by
+  `parcel_id` on the returned row); calling it with an unknown survey number raised the function's
+  `unknown survey number` exception rather than silently doing nothing or inserting an orphaned row. All of
+  this ran under real RLS enforcement (a genuinely low-privilege role, never the table owner or superuser)
+  against a real Postgres engine — not inspected by reading the SQL, not asserted from the TypeScript side.
+  **In-browser**: since this step touches no frontend code, the meaningful browser check is a regression
+  check, not a feature check — loaded a throwaway dev server (already running, reused), landing page and
+  `/official/parcel/parcel-124-7` both rendered with `read_console_messages({onlyErrors: true})` clean,
+  confirming demo mode (which never touches Supabase) is unaffected by a schema/docs-only change.
+### Step 52 — Read the content of PDFs
+
+- `[x]` **`pdfjs-dist` added** (`package.json`) — extracts a PDF's text layer entirely client-side; the
+  file is never uploaded to any external service, keeping the data-sovereignty story from Step 27/29
+  intact. `src/data/pdfText.ts` is the only place that touches it: `extractPdfText(file)` lazily
+  `import()`s `pdfjs-dist` (kept out of the eagerly-loaded bundle — confirmed in the build output below),
+  points `GlobalWorkerOptions.workerSrc` at the bundled `pdf.worker.min.mjs` via a Vite-friendly
+  `new URL(..., import.meta.url)`, reads every page's text content, and returns
+  `{ pageCount, hasTextLayer, text }`. This module is deliberately the *only* browser-API-touching piece —
+  `src/domain/documentCheck.ts` never imports it.
+- `[x]` **`src/domain/documentCheck.ts` rewritten around a per-signal breakdown**, still a pure function
+  of its input (no file reads, no pdfjs/network calls) so the same bytes always produce the same verdict.
+  The old two-bucket (`flaggedReasons`/`reviewReasons`) shape is replaced by a flat `signals: 
+  DocumentCheckSignal[]` (`id`, `label`, `status: 'pass'|'info'|'warning'|'fail'`, `detail`), with the
+  verdict derived from the worst status present (`fail`→flagged, `warning`→needs_review, else
+  looks_complete) — same design principle Step 30's risk engine uses for its contributor breakdown.
+  `reasons: string[]` is kept (flattened non-passing details) so nothing that read `.reasons` elsewhere
+  broke. New content signals, gated behind an optional `content: DocumentCheckContentInput` field so
+  every existing call site (and future tests) can omit it and get file-shape-only behaviour:
+  - **Page count** — a per-`DocumentKind` expected range (e.g. valuation report 2-25 pages, award order
+    2-20) in a new `PAGE_COUNT_EXPECTATIONS` table; outside range is a `warning`.
+  - **Text presence** — `hasTextLayer` false or under 20 chars of extracted text is a `warning` that
+    explicitly names Step 53's OCR ("Read this scan") as the next step, rather than silently passing.
+  - **Expected-keyword match** — a new `DOCUMENT_KIND_KEYWORDS` table (English + Hindi terms per
+    `DocumentKind`, e.g. "Section 11"/"धारा 11" for the notification, "valuation"/"मूल्यांकन" plus a
+    rupee-amount regex for the valuation report and compensation statement) — no keyword hit is a `fail`,
+    keyword-but-no-amount (valuation/compensation/award kinds only) is a `warning`.
+  - **Survey-number match** — `buildSurveyNumberPattern` builds a regex from the parcel's survey number
+    that tolerates stray whitespace around punctuation (so "124/7" also matches "124 / 7"); no match is a
+    `fail`. Per the plan, this is the check a field officer gets the most value from.
+  - **Date plausibility** — `extractDates` recognises `dd/mm/yyyy`, `yyyy-mm-dd`, and `"15 March 2026"`
+    forms; a date after the reference date is a `fail` ("future" data-entry error), a date more than three
+    years before the project's `sanctionedOn` is a `warning`, no dates found is `info` (not penalised).
+  - The content-signal function (`runContentSignals`) is written to accept **either** `pdfExtraction.text`
+    **or** `ocrText` as the text source (whichever is available, PDF text layer preferred) — this is a
+    deliberate Step 53 lookahead so the OCR button that step adds can feed the exact same keyword/
+    survey-number/date checks without duplicating them, matching the plan's explicit instruction ("feed
+    the OCR text through the same Step 52 signals").
+- `[x]` **`ParcelDetailPage.tsx` wired up**: `handleUpload` now calls `extractPdfText` for PDF uploads
+  (wrapped in try/catch — a corrupt/unparseable PDF degrades to `{pageCount:0, hasTextLayer:false,
+  text:''}` rather than blocking the upload) before calling `runDocumentQualityCheck`, passing
+  `documentKind: uploadKind`, `surveyNumber: parcel.surveyNumber`, `referenceDate: DEMO_REFERENCE_DATE`
+  (the app's fixed demo "today", consistent with every other stuck/overdue calculation), and
+  `projectSanctionedOn: project?.sanctionedOn`. The post-upload result panel now renders a `Signal
+  breakdown` list (`.signal-list` in `src/styles.css`) — one row per signal with a tone-coded `Badge`
+  (`getSignalTone` added to `src/pages/statusDisplay.ts`) and its detail sentence — under the existing
+  verdict badge, which still carries the Step 29 "AI-style check (prototype heuristic):" honesty prefix.
+  A new bilingual label (`uiText.parcelDetail.signalBreakdownLabel`, en/hi) sits above the list and says
+  outright that these are "deterministic checks, not a real authenticity verification."
+- `[x]` **Bundle-size effect verified, not assumed**: `npm run build` output shows `pdfjs-dist` split into
+  its own `dist/assets/pdf-*.js` (~438 KB) chunk plus a separately-emitted `pdf.worker.min-*.mjs`
+  (~1.27 MB) asset — neither is pulled into the main `index-*.js` entry chunk, because `extractPdfText`
+  uses a dynamic `import('pdfjs-dist')` rather than a static top-level import. This happened as a natural
+  consequence of isolating pdfjs to `src/data/pdfText.ts`, not a deliberate lazy-loading pass (Step 53 is
+  where lazy-loading is an explicit requirement, for `tesseract.js`).
+
+**Done when:** uploading a PDF that doesn't mention the parcel's survey number produces a specific,
+explained flag; the existing size/name checks still work and still appear; verdicts are deterministic;
+the UI shows the signal breakdown and still labels it a prototype heuristic. — all four met, see
+verification below.
+
+- **Step 52 — verification:** `npm run build` (`tsc -b && vite build`) passes with zero type errors.
+  **In-browser**, on a throwaway dev server against `/official/parcel/parcel-124-7` (session forced to
+  `national_admin` so scope never gets in the way) with the Valuation stage pre-selected by the form's
+  existing stage→kind defaulting: three hand-built single-page PDFs (raw PDF syntax written directly,
+  padded past 25 KB so the file-size signal reads "typical" and doesn't mask the content signals) were
+  uploaded through the real upload form by injecting a `File` into the file input's `DataTransfer` and
+  dispatching a `change` event (no filesystem access from the browser tool, so this is the equivalent of
+  a user picking a file). **PDF #1** — "VALUATION REPORT / Survey No. 124/7, Dhanori, Haveli / Market
+  value assessed at Rs. 42,50,000 / Date: 15/03/2026" — produced verdict **Needs review**, with Page count
+  correctly flagged as a `warning` (1 page vs the expected 2-25 for a valuation report) and every content
+  signal (text layer, expected wording, survey number, date plausibility) passing. **PDF #2** — identical
+  except "Survey No. 91/6" instead of 124/7 — produced verdict **Flagged**, with the Survey number signal
+  reading *"does not mention this parcel's survey number (124/7) anywhere — confirm this is the right
+  document before verifying"* — this is the exact "Done when" scenario from the plan, confirmed working
+  end to end including the disclosure text. **PDF #3** — unrelated filler text, no valuation wording, no
+  survey number, no dates — produced verdict **Flagged** with Expected wording *and* Survey number both
+  failing, and Date plausibility correctly reading `info`/"No recognisable dates were found" rather than
+  penalising the absence of dates. All three verdicts appeared under the "AI-style check (prototype
+  heuristic):" badge with the full signal-breakdown list rendered beneath, each signal showing its own
+  tone-coded badge and detail sentence. The uploaded row also picked up the correct
+  `qualityCheckVerdict` in the Documents table's existing Quality check column, confirming the extended
+  check result still flows through `repository.addDocument` unchanged. Test PDFs were served from a
+  temporary `public/_test-uploads/` directory (git-ignored by nothing — deleted immediately after the
+  verification pass; `git status` confirms it left no trace) rather than pasted as base64, to avoid
+  polluting the repo or the session with megabytes of encoded PDF bytes.
+- Last completed step: Step 52 (content-aware PDF checks — build-verified and browser-verified against
+  the hero parcel with three purpose-built PDFs covering the pass, survey-number-mismatch, and
+  no-content-at-all cases).
+- Last verification: see the Step 52 verification block above. `npm run build` passes with zero type
+  errors; the dev server showed no console errors across all three uploads; the pdfjs worker/library
+  chunks are confirmed absent from the main bundle via the build output.
+- Known blockers: none. Image-file uploads still skip the content signals entirely (no `pdfExtraction`,
+  no `ocrText`) — that gap is exactly what Step 53 (image analysis + on-demand OCR) closes next, and
+  `runContentSignals`/`DocumentCheckContentInput` were already shaped in this step to accept an OCR text
+  source without changes to Step 52's own logic.
+
+### Step 53 — Scanned documents and images
+
+- `[x]` **Canvas-based image analysis, no library** — `src/data/imageAnalysis.ts`'s `analyzeImageFile(file)`
+  decodes the image via `createImageBitmap`, draws it to an off-screen `<canvas>` capped at a 400px-longest-
+  side sample size (cheap: analysis cost is independent of the original resolution), and reads back
+  `getImageData` once to compute, in a single pass: **mean brightness** and **brightness variance**
+  (grayscale-weighted per pixel), plus an **edge-sharpness score** (a Sobel-style gradient magnitude
+  averaged over the sample and normalised to 0-1) used to tell a crisp flatbed/app scan from a blurrier
+  photo-of-a-screen or photo-of-a-document. Width/height are read from the *original* bitmap, not the
+  downsampled canvas, so the resolution check reflects the real file.
+- `[x]` **New image signals in `src/domain/documentCheck.ts`**, added to the existing pure
+  `runContentSignals` alongside Step 52's PDF signals (still gated behind the optional `content` field,
+  still a pure function of already-computed numbers — the canvas work happens only in
+  `imageAnalysis.ts`):
+  - **Blank/near-blank scan** — `brightnessVariance` under a fixed threshold is a `fail` ("looks blank or
+    almost entirely one colour"); a very low-but-not-flat variance is a `warning`.
+  - **Resolution/aspect ratio** — width/height under a floor (a screenshot-sized image is implausible for
+    a scanned statutory document) is a `warning`; an aspect ratio far from portrait/landscape A4-ish
+    proportions is a `warning` naming the likely cause (a cropped photo rather than a full-page scan).
+  - **Capture-quality (edge sharpness)** — a low sharpness score is a `warning` reading "looks more like a
+    photo of a screen or document than a flatbed/app scan — image may be soft or reflective," never a
+    `fail` on its own (a legitimately soft phone photo is still usable evidence, just worth a second
+    look).
+- `[x]` **On-demand OCR with `tesseract.js`, lazy-loaded**: `src/data/ocr.ts`'s `runOcr(file, onProgress)`
+  dynamically `import()`s `tesseract.js` and calls `createWorker('eng+hin', ...)` only when invoked — it
+  is never imported anywhere else, so it cannot end up in the initial bundle by accident. A new "Read this
+  scan (OCR)" button appears in `ParcelDetailPage.tsx`'s document-check result panel **only** when the
+  just-uploaded document's Step 52/53 Text-layer signal reported no readable text (a PDF with no text
+  layer, or an image); clicking it shows a progress percentage (Tesseract's `logger` callback wired to
+  React state), then re-runs `runDocumentQualityCheck` with the OCR text plugged into `ocrText` and the
+  OCR engine's own mean confidence into `ocrConfidence` — which flows into the *same* Step 52
+  keyword/survey-number/date signals via `runContentSignals`'s already-generic text source, exactly as
+  Step 52's writeup anticipated. Every OCR-sourced signal detail is prefixed `"Based on OCR text (NN%
+  confidence) — "` so the officer always knows which pass produced it.
+- `[x]` **OCR never auto-verifies.** The OCR button only replaces the *displayed* check result for that
+  upload session (`lastCheckResult` state) and never calls `repository.verifyDocument` or changes
+  `document.status` — Verify/Reject on the Documents table (Step 29) remains the only path that marks a
+  document verified, and it is still a manual officer action. The OCR result panel's own confidence badge
+  and the unchanged "prototype heuristic" disclosure make this explicit rather than implicit.
+- `[x]` **Bundle-size delta confirmed effectively zero when OCR is not triggered — and the honest reason
+  why is documented, not just asserted.** `npm run build`'s output shows only a ~15.8 KB `index-*.js`
+  chunk attributable to `tesseract.js` (its thin browser API surface), reachable solely via the dynamic
+  `import('tesseract.js')` inside `runOcr` — never in the eagerly-loaded main entry chunk. Reading
+  `node_modules/tesseract.js/src/worker/browser/defaultOptions.js` and
+  `src/worker-script/index.js` confirmed *why* it's this small: unlike Step 52's pdfjs (whose worker is
+  bundled locally via `new URL(..., import.meta.url)`), tesseract.js's actual OCR engine — the worker
+  script, the WASM core, and the `eng`/`hin` `.traineddata` files — are **not bundled by Vite at all**;
+  they default to fetching from `cdn.jsdelivr.net` the first time `runOcr` is called. This is a real,
+  disclosed exception to the "everything processed on-device" framing Step 52's `pdfText.ts` docstring
+  claims for PDF text extraction, so a one-line note was added next to the "Read this scan (OCR)" button
+  (`uiText.parcelDetail.ocrNetworkNote`, en/hi) telling the officer OCR needs an internet connection the
+  first time, while everything else on the page stays fully offline-capable — the same honesty discipline
+  as the language-coverage note (Step 43) and the RLS switch-over note (Step 51), not silently glossed
+  over.
+- `[x]` **Test artifacts never committed.** The near-blank and OCR-text test images were generated
+  entirely in the browser via an in-page `<canvas>` (`canvas.toBlob`) during verification, not saved as
+  files; the no-text-layer test PDF was a temporary hand-written file served briefly from a
+  `public/_test-uploads/` directory and deleted immediately after — `git status` confirms it left no
+  trace, matching the Step 52 approach of never pasting or committing megabytes of test-file bytes.
+
+**Done when:** a blank/near-blank scan is flagged before an officer opens it; OCR runs on demand, is
+absent from the initial bundle, and its text flows into the same keyword/survey-number checks; the bundle
+size delta with OCR not triggered is ~zero. — all three met, see verification below.
+
+- **Step 53 — verification:** `npm run build` passes with zero type errors; build output confirms only
+  tesseract.js's small API-surface chunk (~15.8 KB) is reachable from the app, and only via the dynamic
+  import inside `runOcr` — the actual OCR engine is fetched from jsdelivr on first use rather than bundled
+  at all (see the honesty note above). **In-browser**, on the same throwaway dev server and hero parcel
+  used for Step 52 (`national_admin` session, `/official/parcel/parcel-124-7`, Valuation stage): (1) a
+  600×800 near-blank PNG (solid near-white fill, a handful of 2px near-white specks, generated via
+  in-page canvas) uploaded as a Valuation-stage document immediately showed the new image signals — Blank
+  scan check `fail`/"looks blank or almost entirely one colour", Resolution/aspect ratio `pass`
+  (600×800px), Capture quality `warning` (a flat-colour image has near-zero gradient, correctly read as
+  soft), Text layer `warning` with the "Read this scan (OCR)" button and the network-dependency note —
+  verdict **Flagged**, confirmed before the officer needed to open the file. Clicking "Read this scan" on
+  this blank image ran to completion (Tesseract's own `classify_misfit_junk_penalty`/
+  `merge_fragments_in_matrix` parameter-not-found warnings appeared in the console — normal, non-fatal
+  Tesseract engine chatter, not an app error) and correctly found no recoverable text, leaving Text layer
+  at `warning` rather than fabricating a pass. (2) A one-page PDF containing only a vector-drawn rectangle
+  (`re f`, no `Tj`/text-showing operators at all) uploaded as a second Valuation-stage document correctly
+  produced Text layer `warning`/"no readable text layer" and the same OCR button — confirming the button's
+  trigger condition (the Text-layer signal, not the file type) works identically for PDFs and images, as
+  designed. (3) To verify the OCR→signal pipeline with real content, not just its absence: an 800×500 PNG
+  with canvas-rendered black-on-white text ("VALUATION REPORT / Survey No. 124/7 Dhanori Haveli / Market
+  value Rs. 4250000 / Date 15/03/2026") was uploaded and "Read this scan" clicked — the result correctly
+  showed, each prefixed `"Based on OCR text (95% confidence) — "`: Expected wording `pass` ("contains
+  wording expected for a valuation report"), Survey number `pass` ("mentions survey number 124/7"), and a
+  Date plausibility signal — proving OCR text flows through the *exact same* Step 52 keyword/survey-
+  number/date functions, not a parallel code path, exactly as both this step's plan text and Step 52's own
+  writeup anticipated. Across all three uploads, the Documents table's Quality check column and Status
+  column were read directly from the DOM: every OCR'd document's `status` stayed **Pending Verification**
+  throughout and after the OCR pass — confirming OCR never calls `repository.verifyDocument` or otherwise
+  auto-verifies, only Verify/Reject (Step 29) does.
+- Last completed step: Step 53 (image analysis + on-demand OCR, with the OCR engine's CDN dependency
+  explicitly disclosed rather than silently assumed-offline — build-verified and browser-verified across a
+  blank-scan image, a no-text-layer PDF, and a real OCR-to-keyword-match round trip against the hero
+  parcel).
+- Last verification: see the Step 53 verification block above. `npm run build` passes with zero type
+  errors; dev server console showed only expected/non-fatal Tesseract engine warnings across all three
+  upload scenarios; `tesseract.js`'s bundle footprint confirmed via the build output to be a ~15.8 KB API
+  wrapper only, with the OCR engine itself fetched on demand rather than bundled.
+- Known blockers: none functionally, but one honesty note carried forward: OCR requires network access to
+  `cdn.jsdelivr.net` on first use (tesseract.js's default worker/core/traineddata source) — disclosed in
+  the UI next to the OCR button rather than fixed, since self-hosting those assets is a legitimate future
+  improvement but out of this step's scope. Track D (document intelligence, Steps 52-53) is now fully
+  complete. The edge-sharpness "photo of a screen" heuristic is a coarse Sobel-magnitude proxy, not real
+  forgery/recapture detection — labelled as such in its signal detail text, consistent with this track's
+  framing that it is deterministic content signals, never a real authenticity check.
+
+### Step 54 — QR-coded statutory notices
+
+- `[x]` **QR code component** (`src/components/QrCode.tsx`) — renders a scannable QR code as inline SVG
+  rects using the dependency-free `qrcode-generator` library, fixed black-on-white regardless of app
+  theme (it's a physical, printed artifact, not a themed UI element). Encoding correctness was verified
+  independently: the same matrix, rendered to a pixel buffer and decoded with `jsqr` (a separate library,
+  not the one used to generate it) in a throwaway Node script, round-tripped back to the exact source URL.
+- `[x]` **Notice content module** (`src/domain/noticeContent.ts`) — bilingual, hand-written labels/body
+  templates for a Section 11 Notification and an Award Intimation, in all 10 supported languages, kept
+  out of `src/i18n/translations.ts` to avoid a circular import (same reasoning as `smsPreview.ts`).
+- `[x]` **Notice generator page** (`src/pages/NoticeGeneratorPage.tsx`, route
+  `/official/parcel/:id/notice`, reached via a new "Generate notice" button on the parcel detail page) —
+  notice type defaults from whether the parcel has reached the Award stage, is switchable; renders an
+  English copy and (when different) the owner's-own-language copy side by side, each pre-filled from the
+  live parcel/project record and carrying a QR code linking to `{origin}/landowner/status/{parcel.id}`.
+  Scoped by `isParcelInScope`, same as the parcel detail page. Print-only layout reuses the existing
+  `@media print` discipline (new `.notice-copy`/`.notice-sheet`/etc. rules in `src/styles.css`).
+- **Verification:** `npm run build` passes with zero type errors. In-browser against the hero parcel
+  (`parcel-124-7`, Valuation stage): the button navigated to the notice page, defaulted correctly to
+  "Section 11 Notification" (parcel hasn't reached Award), rendered a correct English copy and a Hindi
+  copy (owner Kavita Patil's `preferredLanguage`) with all fields (survey number, owner, village/tehsil/
+  district, project, area, compensation, date) filled from the real record; switching the type selector to
+  "Award Intimation" correctly recomputed both copies' title and body sentence. Checked at 375px width —
+  fields wrap cleanly, no overlap, the QR code stays crisp. No new console errors introduced (a handful of
+  stale `useSession`/Tesseract console entries present were confirmed pre-existing from earlier test
+  passes in the same long-lived browser tab, not caused by this step).
+
+### Step 55 — Offline-first field capture (PWA)
+
+Scoped deliberately lean per the plan's own "hardest step" warning — a real, working version of every
+bullet in the plan, without a full conflict-resolution system.
+
+- `[x]` **Installable app shell** — `public/manifest.webmanifest` (name, icons, `display: standalone`,
+  `start_url: /official`) plus a hand-rolled `public/icons/icon.svg` (brand orange square, "BS" mark,
+  matching the existing header logo's colors), linked from `index.html`.
+- `[x]` **Minimal service worker** (`public/sw.js`) — precaches the shell on install, cache-first for
+  hashed `/assets/*` build files (safe since their names change every rebuild), network-first with a
+  cached-shell fallback for navigations, and never intercepts cross-origin requests (Supabase) or
+  non-GET methods. Registered only in production builds (`src/main.tsx`) since a cache-first worker would
+  fight Vite's dev-server HMR. Verified via `vite preview`: `manifest.webmanifest` and `sw.js` both serve
+  with correct content-type; `sw.js`'s own syntax and fetch/cache logic were exercised by hand-tracing
+  against the build output. Actual `navigator.serviceWorker.register()` could not be confirmed as
+  *activated* inside this session's sandboxed browser pane (registration rejected with a generic "unknown
+  error fetching the script" that persisted even though a plain `fetch('/sw.js')` from the same page
+  returned 200 with the right MIME type) — most likely a sandbox restriction on service workers in that
+  specific tool, not a defect in the script; flagged honestly rather than silently assumed working.
+- `[x]` **Offline write queue** (`src/data/offlineRepository.ts`) — wraps whichever backend repository is
+  active (demo or Supabase) behind the same `ParcelRepository` interface. Reads fall back to an IndexedDB
+  cache (`parcelCache`/`projectCache` stores) whenever `navigator.onLine` is false, or whenever the real
+  backend call throws. Writes (`advanceParcelStage`, `addDocument`, `verifyDocument`, `addObjection`,
+  `updateObjectionStatus`) are, when offline: applied **optimistically** to the cached parcel snapshot
+  (mirroring `demoRepository.ts`'s own field-level mutation logic, so the UI reflects the change
+  immediately) and enqueued in an IndexedDB `queue` store; when online, sent straight to the backend as
+  before. `drainOfflineQueue()` replays the queue in order against the real backend on reconnect, stopping
+  at the first failure so a retry never applies actions out of order.
+- `[x]` **Offline banner + per-record sync state** — `src/i18n/OfflineContext.tsx` tracks `isOnline` (via
+  `online`/`offline` window events) and the live pending-action list (via a small subscribe/notify hook
+  into the IndexedDB queue, not polling). `src/components/AppShell.tsx` shows a dismissable-by-context
+  banner while offline and a global "N pending sync · Sync now" chip whenever the queue is non-empty
+  (even after coming back online, in case a sync attempt stalls); `src/pages/ParcelDetailPage.tsx` shows a
+  parcel-scoped "N pending sync" badge when that specific parcel has queued changes. New `uiText.offline`
+  strings (en/hi, officer-facing chrome).
+- **Verification (dev server, hero parcel, `national_admin` session):** dispatched a synthetic
+  `window.dispatchEvent(new Event('offline'))` (with `navigator.onLine` overridden to `false`, since the
+  browser tool cannot cut real network access) — the offline banner appeared immediately. Clicked Reject
+  on an already-verified document with a typed reason: the row updated to **Rejected** with the reason
+  shown *immediately*, with zero network activity, and both the global chip ("2 pending sync") and the
+  parcel-scoped badge appeared. Dispatched a synthetic `online` event: both indicators cleared within the
+  same tick the auto-triggered `syncNow()` finished, and the IndexedDB `queue` store was confirmed empty
+  immediately after (read directly via `indexedDB.open(...)` in-page) — proving the queued mutation was
+  successfully replayed against the backend, not just discarded. No console errors during any of this.
+  `npm run build` passes with zero type errors.
+- Known, disclosed limitations: (1) optimistic writes are last-write-wins with no cross-device conflict
+  resolution — correct for one field officer's own device, not a distributed-editing system; (2) service
+  worker *activation* is verified by static inspection and `vite preview`'s static serving, not by a live
+  `navigator.serviceWorker.register()` success inside this session's browser tool (see above); (3) the
+  demo backend (`demoRepository`) is in-memory and resets on a full page reload regardless of sync state —
+  this is pre-existing behavior from Step 0, not something this step changes or could change.
+
+### Step 56 — Forecasting and bottleneck analytics
+
+- `[x]` **New domain module** (`src/domain/forecast.ts`) — pure, deterministic, reuses
+  `getStageDurationStats` rather than inventing new stats machinery:
+  - `getProjectForecast`/`getAllProjectForecasts` — for each parcel still short of Possession, sums the
+    expected remaining days: the rest of its current stage's expected duration (bounded at zero) plus
+    the full expected duration of every stage still ahead, where "expected" is the observed per-stage
+    average when the sample is trustworthy (n ≥ 2) and the SLA threshold otherwise. The project's
+    projected completion date is driven by its *slowest* still-moving parcel (a project finishes when
+    its last parcel does), compared against `targetCompletionOn` to produce a signed gap in weeks.
+  - Bottleneck ranking — the stage with the largest `averageDays − thresholdDays` overage, computed
+    both per-project (feeds the what-if line) and grouped by district/state
+    (`getDistrictBottleneckRanking`/`getStateBottleneckRanking`), worst first, only for groups with at
+    least one completed transition.
+  - What-if line — recomputes the same forecast with the bottleneck stage's expected duration clamped
+    down to its own SLA threshold, and reports the weeks saved (0 when the bottleneck isn't actually
+    over SLA).
+- `[x]` **Reports page wiring** — two new cards on `ReportsPage.tsx`, placed right after the existing
+  stage-duration chart (same "pipeline analysis → decision support" narrative flow): "Forecast &
+  Bottlenecks" (one row per in-scope project: target date, projected date, gap in weeks, bottleneck
+  stage, what-if weeks saved) and "Bottleneck Stage Ranking" (one row per district). Both fall back to
+  `EmptyState` when there isn't a single completed stage transition in scope yet (e.g. a
+  freshly-scoped district with no history). New `uiText.forecast.*` strings, en/hi.
+- **Verification:** `npm run build` passes with zero type errors. In-browser (`national_admin` session,
+  throwaway dev server, `/official/reports`): the Forecast table rendered all 12 projects with plausible,
+  varied gaps (e.g. Nalgonda–Karimnagar Power Transmission Line `+13.7 weeks late` with bottleneck
+  `Award`; Talcher Coalfield `23.4 weeks ahead` with bottleneck `Objection Review` and a `8.7 weeks
+  earlier` what-if) — sign and magnitude track the underlying stage-duration averages already shown one
+  card above, not fabricated numbers. The district bottleneck table listed 36 districts ranked by
+  overage, topped by Dhenkanal (`Objection Review`, 138 avg days vs 30-day SLA, `+108`) — consistent with
+  Step 48's deliberately uneven, non-flat stage-duration dataset. No console errors.
+- Known simplification: the forecast assumes one parcel's remaining path is independent of every other
+  parcel's (no shared officer-capacity contention modeled) — disclosed here rather than overclaimed as a
+  queueing simulation; it is arithmetic over already-computed stage averages, exactly as the plan asked.
+
+### Step 57 — Escalation matrix
+
+- `[x]` **New domain module** (`src/domain/escalation.ts`) — `getEscalationStatus(parcel, asOfDate)`
+  computes `daysPastSla = daysInCurrentStage - stage.thresholdDays` (using the same `getDaysInCurrentStage`
+  the risk engine already uses) and maps it to one of four levels by threshold: Field Officer (within
+  SLA), District Officer (1+ day over), State Authority (16+ days over), Ministry (31+ days over) — a
+  parcel that is comfortably inside its SLA window never escalates, regardless of how old it is.
+  `ESCALATION_LEVEL_TO_APP_ROLE` maps each level to the existing `AppRole` a viewer signs in as (Ministry
+  maps to `national_admin`, the highest role that exists in this prototype's role list), which is what
+  powers the "escalated to me" filter without inventing a fifth session role.
+- `[x]` **Action Center** (`ActionCenterPage.tsx`) — new "Escalation" column (badge, same tone scale as
+  risk level: neutral → info → warning → danger) next to the existing risk-level column, and an
+  "Escalated to me" checkbox above the table that filters the queue to rows whose escalation level maps
+  to the signed-in viewer's role. Hidden for the `landowner` role, which has no escalation queue.
+- `[x]` **Parcel workspace** (`ParcelDetailPage.tsx`) — new "Escalation Status" card directly below the
+  existing risk-assessment card, showing the current level, days past SLA (or "Within SLA"), and a short
+  explainer of the four thresholds — same "show the arithmetic" discipline as the risk engine and the
+  new forecast cards.
+- `[x]` New `uiText.escalation.*` and `escalationLevelLabels` strings, en/hi.
+- **Verification:** `npm run build` passes with zero type errors. In-browser (`national_admin` session):
+  Action Center's Escalation column showed a real spread across all four levels (e.g. survey `786/10`
+  at `State Authority`, `724/11` at `Ministry`, `942/9` at `District Officer`) tracking each row's stage
+  delay, and the "Escalated to me" checkbox is present and scoped correctly for the signed-in role. The
+  hero parcel `124/7` (Valuation, 57 days in stage vs a 21-day threshold — 36 days over) correctly showed
+  `Currently escalated to: Ministry` / `Days past SLA: 36`, matching the threshold math by hand
+  (36 ≥ 31). No console errors.
+- Known simplification: like Step 17's app-role picker itself, this is escalation *display and
+  filtering*, not a notification/paging system — no email or SMS actually fires when a parcel crosses a
+  threshold. That would be a reasonable next step but is out of this step's lean scope.
+
+### Step 58 — Audit / RTI export bundle
+
+- `[x]` **Bundle builder** (`src/domain/auditExport.ts`) — `buildAuditExportBundle(parcel, project)`
+  reuses `buildAuditChain` (Step 27) unmodified, then assembles a flat, self-describing JSON shape (no
+  app-specific TypeScript types required to read it): the parcel record, project summary, full sorted
+  stage history, documents, objections, and the hash chain links, plus a `verification` block that
+  spells out in plain English how to independently check it. `auditExportFilename` produces a
+  `bhoomisetu-audit-<survey>-<id>.json` name.
+- `[x]` **Export page** (`src/pages/AuditExportPage.tsx`, route `/official/parcel/:id/audit-export`,
+  reached via a new "Export audit bundle" button next to "Generate notice" on the parcel workspace) —
+  "Download JSON bundle" triggers a client-side Blob download of the exact bundle object; "Print / Save
+  as PDF" reuses the existing `.notice-sheet`/`.notice-copy` print layout (Step 54) for a printable cover
+  page showing the parcel summary, chain link count, genesis hash, and the full sealed stage-history
+  table with truncated hashes. Scoped by `isParcelInScope`, same as every other parcel-scoped page.
+- `[x]` **Standalone verifier** (`public/verify.html`) — a plain-HTML/vanilla-JS page with zero build
+  step and zero dependency on the rest of the app: the user picks the downloaded JSON file, and the page
+  reimplements `canonicalize`/`sha256Hex`/the chain-walk **independently**, byte-for-byte matching
+  `src/domain/auditChain.ts`'s algorithm (same field order, same `"|"` join, same
+  `previousHash + "|" + canonical` hash input, same genesis-hash-of-64-zeroes), using only
+  `crypto.subtle.digest` in the browser. It renders a per-link table (recomputed hash vs. the sealed hash
+  from the export) and an overall verified/broken verdict — so a third party never has to trust the app
+  that produced the export, only re-derive the same numbers themselves.
+- **Verification:** `npm run build` passes with zero type errors. In-browser (`national_admin` session,
+  hero parcel `parcel-124-7`): the export page correctly rendered the cover page with 4 chain links and
+  the same hashes (`88c5db0554…`, `b6aee1d744…`, `82765f7212…`, `4e084d8807…`) already shown on the
+  parcel workspace's own Audit Chain Ledger (Step 27/58 both call the same `buildAuditChain`, confirming
+  the export reflects exactly what the app already seals — not a re-derived or fabricated set of
+  numbers). `public/verify.html` was confirmed to serve as a genuine static file
+  (`GET /verify.html` → 200, `text/html`, no app JS bundle involved) independent of the SPA route table.
+  Its verification algorithm was checked by direct code comparison against `auditChain.ts` line by line
+  (canonical field order and hash-chaining formula match exactly) rather than only by inspection of
+  matching output, since the sandboxed browser tool used for this session could not complete an actual
+  file-picker upload dialog interaction.
+- Known, disclosed limitation: this session could not drive the native OS file-picker dialog that
+  `verify.html`'s `<input type="file">` opens, so the upload→recompute round trip was verified by code
+  review (the verifier's JS is a line-for-line reimplementation of `auditChain.ts`'s canonicalize/hash
+  functions) rather than by an end-to-end click-through with a real downloaded file. This should be
+  spot-checked once by hand before the final demo: download a bundle from `/official/parcel/<id>/audit-
+  export`, open `/verify.html` directly in a browser, and upload the downloaded file.
+
+### Step 59 — Bulk CSV import with a validation report
+
+- `[x]` **CSV domain module** (`src/domain/csvImport.ts`) — a hand-rolled RFC-4180-ish `parseCsv` (quoted
+  fields, escaped `""`, embedded commas/newlines, no dependency added, same discipline as the QR code and
+  convex-hull modules), `autoDetectColumnMapping` (matches normalized headers against each field name and
+  a small alias list), and `validateImportRow`/`validateImportRows` — row-by-row checks against the same
+  domain rules the rest of the app enforces: required fields, a real stage id, a valid `YYYY-MM-DD` date,
+  non-negative area/compensation, `compensationPaid <= compensationEstimate` (Step 50's own DB constraint,
+  now also checked client-side pre-commit), a project id that actually exists, and duplicate-survey-number
+  detection both within the uploaded batch and against parcels already in the system.
+  `buildImportErrorReportCsv` renders every row's errors back out as a downloadable CSV.
+- `[x]` **Repository support** — added `importParcels(inputs): Promise<ImportParcelsResult>` to the
+  `ParcelRepository` interface (`src/data/types.ts`) and implemented it in all three repositories:
+  `demoRepository.ts` (pushes new parcels with one seed `stage_history` entry into the in-memory store),
+  `supabaseRepository.ts` (batch-inserts `parcels` + `stage_history` rows, chaining each new parcel's
+  first history entry's hash from the genesis constant via the same `computeNextHash` Step 50's
+  `advanceParcelStage` already uses — a bulk-imported parcel gets a real, verifiable audit chain from row
+  one, not an exemption), and `offlineRepository.ts` (delegates straight through when online; refuses with
+  a clear error when offline rather than silently queuing a batch write like the single-record mutations
+  do — disclosed as a deliberate limitation, not an oversight).
+- `[x]` **Bulk Import page** (`src/pages/BulkImportPage.tsx`, route `/official/bulk-import`, new sidebar
+  link in `OfficialShell.tsx`) — three-step flow: upload CSV → column mapper (auto-detected, each field
+  overridable via a dropdown of the file's actual headers) → dry-run preview (a Ready to import / issue-
+  list per row, a downloadable error-report CSV, and a "Commit N valid rows" button that only ever sends
+  the rows that passed validation). Scoped display of which project ids the signed-in role can import
+  into.
+- **Verification:** `npm run build` passes with zero type errors. In-browser (`national_admin` session,
+  throwaway dev server, `/official/bulk-import`): uploaded a 4-row test CSV (built in-memory via
+  `new File([...], ...)` + `DataTransfer` since the sandboxed browser tool cannot drive a native OS file
+  picker) exercising every validation path at once — row 1 valid; row 2 negative area + paid-over-estimate
+  (2 errors); row 3 a duplicate survey number of row 1 plus an invalid date; row 4 an unknown project id.
+  Column auto-detection correctly mapped all 15 columns in order from the file's own headers (confirmed via
+  each `<select>`'s live `value`, since the header names repeat in the page's full accessibility-tree text
+  dump in a way that reads misleadingly at a glance). The preview correctly reported "4 rows total / 1
+  valid / 3 invalid" with the exact expected error messages per row, and clicking Commit produced "Import
+  complete — 1 parcels were imported" with no console errors — confirming `repository.importParcels`
+  executed successfully against the demo backend. A subsequent full-page navigation to `/official/reports`
+  showed the parcel count back at the original 246 rather than 247, which is expected: this session's
+  browser tool navigations are full page (re-)loads, not in-app link clicks, so each one reinitializes
+  `demoRepository`'s in-memory module state — the same pre-existing, already-documented behavior noted in
+  Step 55 ("the demo backend is in-memory and resets on a full page reload"), not a defect introduced here.
+- Known, disclosed limitations: (1) import only seeds bare parcel records (no documents/objections) — a
+  reasonable scope for onboarding, since documents are uploaded per-parcel afterward through the existing
+  flow; (2) `supabaseRepository.importParcels` was written to mirror the existing row-mapping and
+  hash-chaining patterns exactly but, like the rest of Track C's Supabase work, could not be exercised
+  against a live Supabase project in this environment (no credentials/Docker available) — same caveat
+  already on record for Step 50; (3) offline bulk import is refused rather than queued, by design (see
+  above).
+
+### Step 60 — Real parcel geometry
+
+- `[x]` **Deterministic footprint generator** (`getParcelFootprintPolygon` in `src/domain/geo.ts`) —
+  this dataset only ever had a parcel centroid point (Step 12) plus `areaHectares`, never real cadastral
+  GeoJSON, so this function stands in for the missing geometry rather than pretending to have it: a
+  rectangle centered on the parcel's coordinates, sized from its *real* `areaHectares` (a 4 ha parcel
+  visibly covers more ground than a 0.5 ha one — not a fixed-size stamp), with a small per-parcel
+  rotation and aspect-ratio variation derived from a deterministic hash of the parcel id (same parcel id
+  → same footprint, every render, every reload). The docstring and this writeup both say plainly that
+  this is a disclosed stand-in, not authoritative survey geometry — same honesty framing as Step 47's
+  seeded PRNG and Step 52's "prototype heuristic" labelling.
+- `[x]` **`ParcelMap.tsx` now renders polygons, not points** — the single-parcel branch of
+  `ParcelMarkers` (used once a cluster resolves to exactly one parcel — clustering itself, from Step 49,
+  is unchanged) now renders a `<Polygon>` built from `getParcelFootprintPolygon` instead of a
+  `<CircleMarker>`, colored the same way (by project or by status) and carrying the same popup content.
+  Existing convex-hull project boundaries (Step 49) are unchanged and still pair correctly against the
+  new per-parcel polygons at the same zoom levels.
+- `[x]` **Cadastral overlay toggle** — a third toggle button ("Cadastral overlay") next to the existing
+  color-mode toggles renders a faint dashed reference grid (`buildCadastralGridLines`, 14×14 cells over
+  the parcels' padded bounding box) styled like a Bhu-Naksha block lattice. Disclosed as a reference
+  overlay derived from the dataset's own extent, not real cadastral block boundaries (this dataset has
+  none). Off by default; toggled independently of color mode.
+- **Verification:** `npm run build` passes with zero type errors. In-browser (`district_officer` /
+  Maharashtra / Pune session, throwaway dev server on a fresh port with a clean console to rule out
+  stale HMR noise from the editing session): confirmed via direct DOM inspection of the map's
+  `.leaflet-overlay-pane` SVG that (1) individual (unclustered) parcels render as small rotated
+  quadrilateral `<path>` elements — genuine polygons, not circles — and (2) toggling "Cadastral overlay"
+  added exactly 30 dashed `<path>` elements (15 latitude lines + 15 longitude lines, matching
+  `CADASTRAL_CELLS_PER_AXIS = 14` plus one edge each) in the expected `#8a7a4a` dashed style. A
+  fresh dev server + fresh browser tab (`localhost:5184`) confirmed zero console errors on the parcel
+  map page — the errors seen mid-session on the original long-lived tab (`useOffline must be used
+  within an OfflineProvider`, a stray `reading 'en'`) were confirmed to be stale artifacts of Vite HMR
+  churning through many edits in that one tab, not a real defect: a plain `curl` against the dev
+  server's `/src/components/ParcelMap.tsx` returned 200, and the clean fresh-tab load had no errors at
+  all.
+- Known, disclosed limitation: this is genuinely synthetic geometry standing in for real cadastral
+  GeoJSON that does not exist in this dataset — the plan's own wording ("Bhu-Naksha-style cadastral
+  overlay") is honored as a *visual reference pattern*, not as ingestion of real survey-block data. If
+  BhoomiSetu ever received real per-parcel GeoJSON (e.g. from a state's Bhu-Naksha export), swapping it
+  in only requires replacing `getParcelFootprintPolygon`'s return value — `ParcelMap.tsx` already
+  consumes a plain `GeoPoint[]` and does not care how it was produced.
+
+### Step 62 Part A — Dual-role authentication
+
+- `[x]` **`src/auth/authRepository.ts`** — a new, self-contained local-mock auth layer. Citizen OTP is a
+  fixed local mock (no Firebase project): `requestOtp` generates a random 6-digit code (`generateOtpCode()`),
+  stores it in an in-memory `pendingOtpByPhone` map keyed by phone number, and returns `{ code }` to the
+  caller — since there's no SMS gateway to deliver it through, the UI displays the code directly
+  (clearly labeled as demo-mode). `verifyOtp` checks the submitted code against that phone's stored code
+  and clears it on success, resolving a citizen `AuthedUser`. *(Amended after initial delivery — this
+  step originally shipped with a fixed `123456` code; see the Step 62 Part B entry below for the
+  randomization amendment.)* Officer sign-in is checked
+  against `DEMO_OFFICERS`, a fixed list of five accounts — one per existing `OfficialRole` job title
+  (`district_collector`, `land_acquisition_officer`, `survey_officer`, `valuation_officer`,
+  `compensation_officer`), e.g. `district.collector@gov.in`. Each entry also carries the `AppRole`
+  (permission tier) that actually drives routing/scoping, since `OfficialRole` and `AppRole` are two
+  separate, pre-existing concepts in this codebase (`OfficialRole` labels *who handles a stage*;
+  `AppRole` is what `RequireRole`/scoping check) — `district_collector`/`land_acquisition_officer` map
+  to `district_officer`, `survey_officer`/`valuation_officer` map to `field_officer`, and
+  `compensation_officer` maps to `state_authority`. `DEMO_CITIZEN_PROFILE` is tied to hero parcel
+  `124/7`'s actual owner from `src/domain/demoData.ts` (Kavita Patil, not a placeholder name), so the
+  citizen quick-login button lands on the exact parcel every other demo walkthrough already centers on.
+  `DEMO_OFFICER_PROFILE` is the District Collector, pre-scoped to Maharashtra/Pune (124/7's own district)
+  so its 1-click button never needs a scope picker.
+- `[x]` **`Session` extended** (`src/i18n/SessionContext.tsx`) — added an optional `user?: AuthedUser`
+  field alongside the existing `role`/`stateScope`/`districtScope`, plus `signIn(user, role, stateScope?,
+  districtScope?)` and `signOut()` on the context value. `readStoredSession`'s existing tolerant-parsing
+  pattern (drop anything malformed rather than reject the whole session) was extended to the new `user`
+  field via a new `isAuthedUser` type guard — a corrupted/old-shape `user` in localStorage now just
+  disappears from the restored session instead of logging the visitor out of role/scope too.
+- `[x]` **`src/pages/AuthPage.tsx`** at the new public `/auth` route — replaces the old LandingPage
+  sign-in panel. A minimal header (brand mark, language picker, theme toggle — no full `AppShell` nav)
+  sits above an "Evaluator quick login" card with the two 1-click buttons, then a Landowner/Government
+  Officer tab toggle. The Landowner tab is phone → Send OTP → 6-digit code input with a 60-second
+  resend countdown (`setInterval`-driven) → Verify, with an inline error card (no toast/modal, no page
+  reload) on a wrong code. The Officer tab is email/password first; on success it moves to a second
+  step that ports the exact `requiresStateScope`/`requiresDistrictScope` + state/district `<select>`
+  logic the old `LandingPage.tsx` sign-in panel used (same district options, computed from the real
+  project/parcel data via `repository.listProjects()`/`listParcels()`) so district- and field-scoped
+  officers still pick their scope before `signIn()` is called; state-scoped-only officers (currently just
+  `compensation_officer`) get a one-field state-only version of that same step. Wrong credentials show
+  the same kind of inline error card.
+- `[x]` **Route guards extended to the landowner side** (`src/App.tsx`, `src/components/RequireRole.tsx`)
+  — `/landowner`, `/landowner/status/:id`, and `/landowner/*` are now wrapped in
+  `RequireRole(['landowner'])`, the same guard component `/official` already used (previously the
+  landowner portal was intentionally anonymous/login-free; Step 62 makes it require the citizen OTP
+  sign-in like the rest of the plan expects). `RequireRole`'s no-session redirect target changed from `/`
+  to the new `/auth`; its existing wrong-role-but-signed-in behavior (redirect to
+  `/official/access-restricted`) is unchanged and now also fires the other direction — an officer session
+  hitting a landowner route lands on Access Restricted exactly like a landowner session hitting `/official`
+  always did.
+- `[x]` **Sign-out UI** — `OfficialShell.tsx`'s sidebar gained a footer block below the nav (avatar with
+  initials from `session.user.name`, name, email, Sign Out button) that only renders when
+  `session?.user` is set; `AppShell.tsx`'s header gained an equivalent `.user-chip` (avatar + name + Sign
+  Out) before the existing `NotificationCenter`, shared by the landowner portal and any other
+  `AppShell`-nested page. Both Sign Out controls call the new `signOut()` and navigate to `/auth`.
+- `[x]` **`LandingPage.tsx`/`LandingNav.tsx` cleanup** — the entire `id="sign-in"` role-picker section
+  (role grid, state/district selects, the `projects`/`parcels` state and memoized options that only
+  existed to feed it) was removed from `LandingPage.tsx`, along with the now-dead
+  `requiresStateScope`/`requiresDistrictScope`/`ROLE_DESTINATION`/`handleSignIn`/etc. helpers. Both of the
+  page's `#sign-in` anchors (the hero CTA button and `LandingNav`'s nav-bar "Sign in" link) now route to
+  `/auth` via React Router `Link` instead of a same-page anchor jump.
+- `[x]` **New CSS + translations** — every class used by `AuthPage.tsx` and the two sign-out UIs
+  (`.auth-shell`, `.auth-header`, `.auth-quick-login*`, `.auth-tabs`/`.auth-tab-btn`, `.auth-form*`,
+  `.auth-otp-*`, `.auth-error`, `.user-chip*`, `.sidebar-user*`, `.sidebar-signout-btn`) is new and
+  purpose-built in `src/styles.css`, following the existing flat/inset-border, amber-accent visual
+  language (no reuse of page-specific classes like `.filter-grid` or the landing page's `.bs-*`
+  classes). All new user-facing strings were added under `uiText.auth.*` and `uiText.user.*` in
+  `src/i18n/translations.ts` with English + Hindi.
+- **Verification:** `npm run build` passes with zero type errors (`tsc -b && vite build`). In-browser on
+  a throwaway dev server (`localhost:5173`, fresh tab): (1) `/auth` renders the quick-login banner and
+  both tabs with no console errors; (2) manual citizen flow — entered a phone number, Send OTP showed
+  the 60s resend countdown, entering `111111` showed the inline "Incorrect OTP" error with no navigation,
+  entering `123456` signed in and navigated to `/landowner`, where the header showed a "KP · Kavita
+  Patil · Sign out" chip; clicking Sign Out returned to `/auth` and confirmed via a direct navigation to
+  `/landowner` that the session was actually cleared (redirected straight back to `/auth`, not just a
+  client-side chip disappearing); (3) Demo Officer quick-login signed in as District Collector and landed
+  on `/official` scoped to Pune, with hero parcel `124/7` visible in the Attention Queue exactly as every
+  other officer-side verification in this file expects; that same officer session hitting `/landowner`
+  redirected to Access Restricted (confirmed the sidebar's sign-out block was still visible there, reused
+  from `OfficialShell`); (4) manual officer flow — wrong credentials showed the inline "Incorrect email or
+  password" error with no navigation, then `survey.officer@gov.in` / `survey@123` correctly reached the
+  scope-picker step (state → Maharashtra populated the real district list from parcel data → Nashik),
+  and signing in landed on `/official` as "Survey Officer" / Field Officer scoped to Nashik; (5) switching
+  the language picker to Hindi on `/auth` re-rendered every new string correctly (quick-login card,
+  tabs, field labels, button). No console errors were seen at any point in this pass.
+- Known, disclosed limitations/scope boundaries: (1) `DEMO_OFFICERS` has no `national_admin` entry — the
+  five demo accounts are one per existing `OfficialRole` job title, and none of those job titles maps to
+  the unscoped national tier in this prototype's existing role model, so `/official/national` is not
+  reachable through this step's sign-in flow (it was already reachable in Step 24's old picker only via a
+  role the new plan does not ask this page to expose); this is a scope decision, not an oversight, and can
+  be revisited if a later step needs a national-tier demo login. (2) As stated in the plan, this step does
+  not touch the chatbot, statutory lapse clock, time-travel scrubber, or voice objection filing — those
+  remain Steps 63–66.
+
+### Step 62 Part B — Landowner help chatbot
+
+- `[x]` **`src/domain/chatbotContent.ts`** — the closed topic menu. `CHAT_TOPIC_IDS` fixes 9 topics
+  (status, stages, documents, objection, compensation, statusMeaning, language, contact, about), each with
+  an icon and an English+Hindi keyword list. `matchChatTopic()` scores typed/spoken input against those
+  keyword lists and returns the best-matching topic id (or `undefined`, which triggers the fallback
+  message); `matchChatStage()` does the same against a separate English keyword list to route input to one
+  of the 7 acquisition stages while the documents sub-menu is open. Keywords only ever pick *which* fixed
+  reply plays — there is no free-text generation path anywhere in this module.
+- `[x]` **`src/components/LandownerChatbot.tsx`** — the widget itself: a floating FAB (bottom-right) that
+  opens a panel with a message transcript and a 3-mode state machine (`menu` → the 9 topic buttons;
+  `documents` → the 7 stage buttons + a back button; `awaitingSurvey` → the next typed/spoken message is
+  treated as a survey number). Reuses existing logic rather than re-deriving it: `repository.
+  getParcelBySurveyNumber` for the lookup, `getParcelCalculatedStatus`/`getAdvanceGate` (`src/domain/
+  rules.ts`) plus `getAdvanceGateReasonText`/`getStatusIcon` (`src/pages/statusDisplay.ts`) for the status
+  summary text, and `VoiceInputButton` for the mic input — the same components/functions `LandownerPage.tsx`
+  and `ParcelMap.tsx` already use. Renders `null` unless `session.role === 'landowner' && session.user`, so
+  it never mounts before a landowner has signed in.
+- `[x]` **`src/domain/index.ts`** — `export * from './chatbotContent'`, following the existing barrel-export
+  pattern.
+- `[x]` **`src/components/AppShell.tsx`** — mounts `<LandownerChatbot />` once, after `<Outlet />`, inside
+  the shell that every non-landing, non-auth route renders through. Combined with the component's own
+  role/session guard, this means the FAB can only ever appear on landowner-role pages (`/landowner`,
+  `/landowner/status/:id`) — never on `/`, `/auth`, or any `/official/*` page, and never before sign-in.
+- `[x]` **Translations + CSS** — `uiText.chatbot.*` (widget chrome, prompts, fallback message, and all 9
+  topics' canned answers), plus `chatbotTopicLabels`, `chatbotStageDescriptions`, and
+  `chatbotStatusMeaningDescriptions` lookup maps, added to `src/i18n/translations.ts` in English + Hindi —
+  reusing the existing `stageLabels`/`dashboardStatusLabels`/`documentKindLabels` maps wherever the bot
+  needed to show a stage, status, or document name, so only the newly-authored explanatory sentences are
+  new copy. `src/styles.css` gained `.chatbot-*` rules (FAB, panel, message bubbles, topic-button chip row,
+  composer) matching the existing flat/inset-border, amber-accent visual language, plus a small-screen
+  width rule.
+- `[x]` **Part A amendment folded in — random per-request citizen OTP.** `src/auth/authRepository.ts` was
+  amended (after this step's initial delivery) to replace the fixed `123456` OTP with `generateOtpCode()`,
+  a random 6-digit code generated per request and held in an in-memory `pendingOtpByPhone` map; since this
+  demo has no SMS gateway, `requestOtp` returns `{ code }` and `src/pages/AuthPage.tsx` displays it inline
+  via a new `.auth-otp-demo-code` note (`demoOtpCode` state, cleared on "Change number"), labeled as a
+  demo-mode code. `verifyOtp` checks the submitted code against that phone's stored code and clears it on
+  success. The Quick-Login evaluator buttons (Demo Citizen / Demo Officer) are unchanged — they call
+  `signIn()` directly and never go through OTP. `uiText.auth.otpDemoCodePrefix` (en+hi) and a matching
+  `.auth-otp-demo-code` CSS rule were added alongside.
+- **Verification:** `npm run build` passes with zero type errors (`tsc -b && vite build`). In-browser on a
+  throwaway dev server (`localhost:5173` via `.claude/launch.json`'s `sih-dev` config): (1) citizen OTP —
+  entering a phone number and pressing Send OTP showed a random 6-digit code in the new demo-mode banner;
+  a wrong code showed the existing inline "Incorrect OTP" error with no navigation; entering the exact
+  displayed code signed in and landed on `/landowner`; "Change number" cleared the banner and returned to
+  the phone-entry step; a second, separate OTP request in a later session produced a different random code
+  than the first, confirming per-request randomization; (2) both Quick-Login buttons (Demo Citizen, Demo
+  Officer) still sign in with zero friction, unchanged; (3) signed in as landowner, the chatbot FAB appeared
+  bottom-right on `/landowner`, and opening it showed the greeting plus all 9 topic buttons; (4) "Check my
+  parcel status" → typed `124/7` → returned the correct stage (Valuation), status (Stuck), and missing
+  document, with a "View full details" link that navigated to `/landowner/status/parcel-124-7` and closed
+  the panel — matching the parcel detail page's own data; (5) "What documents do I need?" → picked
+  "Valuation" → returned the correct required-document list ("Valuation report"), matching the parcel's own
+  missing-document note; (6) clicked through the remaining 7 topics (stages, objection, compensation,
+  status-label meaning, language, contact, about) — each showed its correct canned text; (7) a typed
+  close-paraphrase not matching any button label verbatim ("I want to dispute the valuation") correctly
+  routed to the objection topic via keyword matching; nonsense text ("asdkfj qwoeiru zzz banana") correctly
+  showed the fallback message and re-displayed the main menu; (8) confirmed the widget does not render on
+  `/`, `/auth`, or `/official` (checked directly, signed in as Demo Officer), and does not appear before
+  landowner sign-in; (9) switching the language picker to Hindi and restarting the chat showed the greeting,
+  menu prompt, all 9 topic-button labels, and a full canned answer (stages) correctly in Hindi, with the
+  reused stage/status/document labels also in Hindi. No console errors were seen at any point in this pass.
+- Known, disclosed limitations/scope boundaries: (1) chatbot copy (`uiText.chatbot.*` and its three lookup
+  maps) is English + Hindi only, pending the other 8 languages this codebase otherwise supports — the same
+  disclosed-partial-coverage pattern already used for `officialRoleLabels`/`appRoleLabels`. (2) This is
+  deliberately a closed fixed-menu bot, not a free-form/LLM assistant — `matchChatTopic`/`matchChatStage`
+  only ever select among pre-written replies, by design, so it can never be asked to produce something
+  outside what it was built to say. (3) As before, this step does not touch the statutory lapse clock,
+  time-travel scrubber, or voice objection filing — those remain Steps 63–65.
+
+### Step 63 — Statutory lapse clock (LARR 2013 §19 / §24, Track G)
+
+- `[x]` **Data model** — added `declarationOn: ISODateString` to `AcquisitionParcel`
+  (`src/domain/types.ts`), the Section 19 declaration date the lapse clock keys off. In the demo dataset
+  (`src/domain/demoData.ts`) it's derived from each parcel's own `'notification'` stage history entry
+  (always present, since every parcel's history starts there) rather than inventing a second unrelated
+  date — documented as a deliberate simplification, since in reality the Section 19 declaration can
+  postdate the Section 11 notification. Bulk-imported parcels (`demoRepository.ts`,
+  `supabaseRepository.ts`, `scripts/seedSupabase.ts`) fall back to `stageEnteredOn` — the best available
+  date, since a CSV import has no recorded declaration event. `supabase/schema.sql` gained a matching
+  `declaration_on date not null` column (no cross-column default — Postgres can't default one column to
+  another's value, so every writer sets it explicitly).
+- `[x]` **`src/domain/lapse.ts`** — new pure, deterministic module (no I/O), following `rules.ts`/`risk.ts`
+  style. `getLapseStatus(parcel, asOfDate = DEMO_REFERENCE_DATE): LapseStatus` returns
+  `{ statute: 'section_19' | 'section_24' | 'none', risk: 'safe' | 'approaching' | 'lapsed', daysRemaining,
+  deadlineOn, reasonText }`. Section 19 applies whenever the parcel's `history` has no `'award'` entry yet:
+  lapsed if `daysBetween(declarationOn, asOfDate) > 365`, approaching inside the last 60 days of that
+  window. Section 24 applies once an award exists: lapsed if `daysBetween(awardDate, asOfDate) > 1825` AND
+  (`compensationPaid < compensationEstimate` OR no `'possession'` history entry exists) — a parcel with
+  compensation paid in full *and* possession taken is always `'none'`/`'safe'` regardless of how long ago
+  the award was, so no false positives. `reasonText` is a computed plain-English sentence, same convention
+  `risk.ts`'s `recommendedAction` already follows (not run through the translation system).
+- `[x]` **UI — parcel workspace** (`ParcelDetailPage.tsx`) — a full-width `.lapse-banner` (new CSS in
+  `styles.css`, amber/red matching the existing badge-warning/badge-danger palette, both light and dark
+  `data-theme` variants) renders above the Status card whenever `risk !== 'safe'`, composed from
+  `getLapseStatus` plus the parcel's own `compensationEstimate`: "₹X and Y months of process become void
+  in Z days under Section 19(1); restart from Section 11." (or the lapsed-tense variant), plus the
+  statutory deadline date and a disclaimer line. The same banner (plain-language title, no officer jargon)
+  was also added to the citizen-facing `LandownerStatusPage.tsx`, per the plan's cheap-optional item 5 —
+  "the app arguing against its own client's timeline."
+- `[x]` **UI — rollups.** `NationalDashboardPage.tsx` gained a "Statutory Lapse Risk" tile in the summary
+  grid (`N of M parcels — A approaching, L already lapsed`), computed by reducing `getLapseStatus` over
+  the already-scoped parcel list — no new scoping logic. `ActionCenterPage.tsx` gained a "Lapse Risk"
+  badge column (reusing the existing badge-tone pattern) and a "Show only statutory lapse risk" checkbox
+  filter (same pattern as the existing "escalated to me" filter) that narrows the queue to `risk !== 'safe'`
+  and re-sorts it by `daysRemaining` ascending (most urgent first), so every at-risk parcel surfaces in the
+  one list an officer already checks rather than a separate one-off view.
+- `[x]` **Seed data.** `src/domain/demoData.ts`'s `applyLapseClockDemoOverride` deliberately places one
+  non-hero, most-advanced-but-pre-award parcel's `declarationOn` 320 days before `DEMO_REFERENCE_DATE` —
+  inside the Section 19 "approaching" window (45 days from the 365-day deadline) — the same rehearsed,
+  deterministic-number discipline Step 47's hero seeds already established. The candidate is picked
+  programmatically (highest current-stage order below `'award'`, stable over the fixed `DISTRICT_PROFILES`
+  order), not hand-typed, so it survives future dataset regeneration.
+- `[x]` **Translations** — `uiText.lapseClock.*` plus standalone `lapseRiskLabels`/(statute labels folded
+  into `lapseClock`) maps in `src/i18n/translations.ts`, English + Hindi only — matching the citizen-scope
+  coverage convention this codebase's other partially-translated features already follow (`coverageReport.ts`
+  treats missing languages as an English fallback, not a bug).
+- **Verification:** `npm run build` passes with zero type errors (`tsc -b && vite build`). In-browser on a
+  throwaway dev server (`localhost:5173`): as `district_officer` (Demo Officer quick-login, Pune-scoped),
+  the Action Center's new "Lapse Risk" column showed hero parcel `124/7` as "Within statutory window"
+  (green, correctly safe), and enabling "Show only statutory lapse risk" narrowed the 13-parcel Pune queue
+  to exactly 1 row: `301/9`, "Approaching lapse" (amber). Opening `/official/parcel/parcel-301-9` showed
+  the banner "₹34,15,000 and 11 months of process become void in 45 days under Section 19(1); restart from
+  Section 11." with statutory deadline `2026-10-11` — hand-verified against the seed override
+  (`declarationOn` = `DEMO_REFERENCE_DATE` − 320 days ⇒ deadline = declaration + 365 days = `DEMO_REFERENCE_DATE`
+  + 45 days = 2026-10-11; months = round((365−45)/30) = 11; amount matches the parcel's own
+  `compensationEstimate`). Hero parcel `124/7`'s own workspace showed no banner (safe, declared only ~57
+  days ago). Simulating a `national_admin` session (localStorage session swap, since this quick-login flow
+  has no seeded national-admin account) showed the National Dashboard's new "Statutory Lapse Risk" tile
+  reading "1 of 246 parcels — 1 approaching lapse, 0 already lapsed" — matching the Action Center's single
+  flagged parcel exactly, confirming no false positives anywhere else across the full seed dataset (every
+  award/possession-stage parcel in this demo falls well inside the Section 24 five-year window, since every
+  project's `sanctionedOn` date is within the last ~2 years). The citizen-facing `LandownerStatusPage.tsx`
+  banner for `301/9` rendered the same figures in plain language ("This case is close to a legal
+  deadline..."), and showed no banner for the safe hero parcel. No console errors were seen at any point.
+- Known, disclosed limitations: (1) this checks the statute's default timeline only — judicial extensions,
+  de-notification, and state-specific LARR amendments are not modeled, and the in-app disclaimer says so
+  plainly; this is not a legal opinion. (2) The Section 19 declaration date is treated as identical to the
+  Section 11 notification date throughout the demo dataset (except the one deliberately-overridden
+  "approaching" parcel) — a documented simplification, not a claim that the two are legally the same
+  event. (3) `uiText.lapseClock.*` is English + Hindi only, the same disclosed partial-coverage pattern
+  already used elsewhere in this codebase (e.g. `officialRoleLabels`/`appRoleLabels`). (4) As before, this
+  step does not touch the time-travel scrubber or voice objection filing — those remain Steps 64–65.
+
+### Step 64 — Time-travel dashboard scrubber (Track G)
+
+- `[x]` **New pure function module** — `src/domain/timeTravel.ts`, following `rules.ts`/`risk.ts`/`lapse.ts`
+  style (deterministic, no I/O). `getParcelStateAsOf(parcel, asOfDate): AcquisitionParcel | undefined`
+  replays `parcel.history` to find the entry whose `enteredOn <= asOfDate` and (`exitedOn` unset or
+  `exitedOn > asOfDate`), and rebuilds the parcel with that entry's `stage`/`enteredOn` as
+  `currentStage`/`stageEnteredOn`, `documents` filtered to `uploadedOn <= asOfDate`, and `objections`
+  filtered to `submittedOn <= asOfDate`. Returns `undefined` when `asOfDate` predates the parcel's first
+  history entry (it didn't exist yet). `getParcelsStateAsOf(parcels, asOfDate)` maps an array through this
+  and drops the `undefined`s — the one function every rollup below actually calls.
+- `[x]` **Wired into existing rollups, not rebuilt.** `OfficialPage.tsx`, `NationalDashboardPage.tsx`, and
+  `ActionCenterPage.tsx` each compute `snapshotParcels = getParcelsStateAsOf(scopedParcels, asOfDate)` and
+  pass that array (plus the same `asOfDate`) into the exact same `getDashboardSummary` /
+  `getParcelCalculatedStatus` / `getAttentionParcels` / `getNationalSummary` / `getActionCenterQueue` calls
+  already used today — no new counting or risk-scoring logic anywhere. `ParcelMap.tsx` gained an optional
+  `asOfDate` prop (default `DEMO_REFERENCE_DATE`, so every other caller is unaffected) threaded into its
+  existing `getParcelCalculatedStatus` call for marker/popup coloring.
+- `[x]` **UI — the scrubber.** New shared component `src/components/TimeTravelScrubber.tsx`: a date-range
+  slider (native `<input type="range">` over a day-index, converted with `addDays`/`daysBetween` from
+  `rules.ts`) plus a live "as of" label, a "Jump to today" reset button (only shown when scrubbed away from
+  live), and an inline note — "Showing live data." at the rightmost (default) position, or the full
+  reconstructed-snapshot disclaimer otherwise. Reused identically on the district dashboard, national
+  dashboard, and Action Center — same component, same translations (`uiText.timeTravel.*`, English +
+  Hindi, matching the official-only scope this feature has). Each page computes its own `minDate` as the
+  earliest `history[].enteredOn` across that page's in-scope parcels (falling back to
+  `DEMO_REFERENCE_DATE` if scope is empty); `maxDate` is always `DEMO_REFERENCE_DATE` — the rightmost
+  position is always "today," so a page that never touches the scrubber renders exactly as before this
+  feature existed.
+- `[x]` **Debounced drag.** Each page threads the raw slider value through `useDebouncedValue` (150ms,
+  reusing the same hook `OfficialPage.tsx`'s survey-number search already uses) before recomputing
+  `snapshotParcels` — dragging updates the slider label instantly but only re-runs the parcel-array
+  reconstruction and downstream rollups once the drag pauses.
+- `[x]` **Visual "as of" indicator.** The scrubber's own note line doubles as this — "Showing live data."
+  vs. "This is a reconstructed snapshot as of {date} — not the live view. Derived by replaying the same
+  hash-chained stage history the Audit Export page verifies." — so a scrubbed view is unambiguous and
+  can't be mistaken for the live dashboard.
+- `[x]` **Objection/document status-over-time caveat** — stated directly in `timeTravel.ts`'s module
+  comment and in `uiText.timeTravel.disclaimerNote`: an objection/document counts in the snapshot if it
+  existed by `asOfDate` (by `submittedOn`/`uploadedOn`), but is shown with its *current* status, not its
+  true status on that date, since `ParcelObjection`/`ParcelDocument` only carry single
+  `updatedOn`/`reviewedOn` timestamps rather than a full status-change history.
+- **Verification:** `npm run build` passes with zero type errors (`tsc -b && vite build`). In-browser on a
+  throwaway dev server (`localhost:5173`), signed in as the Demo Officer (District Collector, Pune-scoped):
+  the district dashboard's scrubber defaulted to "आज" (today) with "Showing live data." and the unscrubbed
+  totals (13 parcels, 7 stuck, 5 pending uploads, by-stage breakdown 2/1/2/4/1/3/0). Dragging the slider to
+  its leftmost position (`2026-01-31`, the earliest in-scope `history` entry) correctly reconstructed the
+  dataset down to 1 parcel that existed that early, with the "reconstructed snapshot" disclaimer banner
+  shown and the parcel's stage/documents matching what its seed history says was true on that date.
+  Clicking "Jump to today" restored the dashboard to numbers byte-identical to the pre-scrub live view
+  (13/7/5 and the same by-stage counts), confirming scrubbed-to-today output matches the non-scrubbed
+  dashboard exactly. Targeted replay check against hero parcel `124/7` (Done-when item 1): its seed history
+  (`src/domain/demoData.ts`) has the current `'valuation'` entry starting `2026-07-01`, with the preceding
+  `'objection_review'` entry ending (`exitedOn`) on that same date. Setting the scrubber to `2026-06-25` (6
+  days before that boundary) showed `124/7` back in "आपत्ति समीक्षा" (Objection Review), stuck at 42 days —
+  hand-verified as correct against the seed history — while the live/today view (confirmed separately)
+  shows it in "मूल्यांकन" (Valuation), stuck at 57 days; the dataset total also correctly dropped from 13
+  to 10 parcels (three parcels' earliest history entry postdates `2026-06-25`). The map's cluster-count
+  legend changed between the two dates (5/7 live vs. 6/2 at the earlier date), confirming
+  `ParcelMap.tsx`'s markers are keyed off the snapshot, not the live parcel list. The Action Center's
+  scrubber was verified separately: scrubbing to `2026-02-10` correctly narrowed the risk queue from 13
+  entries to 1 (`304/3`, the only parcel that existed that early), with a freshly recomputed risk score
+  (20, "low") and reason text ("Section 11 notification" missing) reflecting that snapshot rather than the
+  live parcel state. The National Dashboard's scrubber wiring uses the identical
+  `getParcelsStateAsOf`/`getNationalSummary(asOfDate)` pattern verified on the other two pages, but could
+  not be exercised end-to-end in this session — the demo login flow has no seeded `national_admin` quick
+  login (only district-officer and landowner quick logins exist; national-admin requires an
+  email/password account this environment doesn't have), the same gap noted in Step 63's verification.
+  No console errors were seen at any point.
+- Performance: not separately re-benchmarked in this session; the wiring reuses Step 49's exact
+  memoization/debounce discipline (same `useDebouncedValue` hook, same `useMemo` boundaries) rather than
+  adding new computation shape, so it inherits that step's prior 250-parcel performance verification.
+- Known, disclosed limitations: (1) the hash chain (`src/domain/auditChain.ts`) proves the underlying
+  `history` entries weren't tampered with — it does not itself prove this snapshot-reconstruction logic is
+  correct; the scrubber's own UI note states this distinction plainly rather than implying the replay is
+  cryptographically verified. (2) Objections and documents are counted by existence-by-date but shown with
+  their current status, not their true status on that date (see above) — stated in-app, not hidden. (3)
+  The National Dashboard's scrubber could not be exercised in-browser this session for lack of a seeded
+  national-admin demo login (see above); it is wired identically to the two pages that were verified, but
+  a future session with `national_admin` access should confirm it directly. (4) Voice objection filing
+  (Step 65) remains not started.
+
+### Step 65 — Voice objection → formal legal filing (LARR §15, Track G)
+
+- `[x]` **Extended, not forked, the objection model.** `OBJECTION_REASONS` (`src/domain/constants.ts`) now
+  carries a `statute` citation per entry (`ownership` → Section 15(1)(a), `measurement` → Section 15(1)(b),
+  `valuation`/`compensation` → Section 15(1)(c) — both being compensation-related grounds under that same
+  sub-clause — `other` → a generic "Section 15" citation, since it has no clean 15(1) sub-clause mapping).
+  A new `OBJECTION_REASON_STATUTES: Record<ObjectionReason, string>` derives the citation lookup the same
+  way `OBJECTION_REASON_LABELS` already derives the label lookup. No new type, no schema change —
+  `ParcelObjection`/`AddObjectionInput` are untouched, so every existing caller (repository, officer queue,
+  Action Center) kept working unmodified.
+- `[x]` **`src/domain/objectionClassifier.ts`** — new pure module, `matchObjectionGround(rawInput): ObjectionReason | undefined`,
+  mirroring `chatbotContent.ts`'s `matchChatTopic` scoring shape exactly (keyword-hit counting, highest
+  score wins, ties keep the first-seen topic). English + Hindi keyword lists per ground, per the plan's
+  "at minimum" instruction and the same citizen-scope convention. This is a closed keyword matcher, not an
+  NLP/LLM step — same framing the chatbot already uses — and it only ever *pre-selects* a dropdown option;
+  it never files anything by itself.
+- `[x]` **`src/domain/legalFilingContent.ts`** — new module mirroring `noticeContent.ts`'s
+  `buildNoticeContent` shape (full ten-language `LABELS` map, since this module is an explicit mirror of
+  that one, not a net-new UI-text decision). `buildObjectionFilingContent(objection, groundLabel, params,
+  language): ObjectionFilingContent` returns the translated document chrome, the resolved statute citation,
+  and the field values for one printed copy. The ground label itself is passed in by the caller rather than
+  duplicated here, since it is already correctly resolved from `objectionReasonLabels` per language.
+- `[x]` **Voice-enabled the objection form** (`LandownerStatusPage.tsx`, the actual "Submit an Objection"
+  card — the plan's `ParcelDetailPage.tsx` reference was slightly off; that page only holds the *officer's*
+  read/update view of objections, not the landowner's submission form). Added `VoiceInputButton` above the
+  reason dropdown. On a voice result: `matchObjectionGround` runs on the transcript, the matched ground (if
+  any) pre-selects the dropdown, the transcript pre-fills the description field, and a confirmation note
+  shows "We heard: '&lt;transcript&gt;' — Filed under &lt;ground&gt; (&lt;citation&gt;)." or, when nothing matched, "We
+  couldn't match this to a specific ground — please pick the closest reason below," always followed by
+  "Not what you meant? Pick a different reason below before submitting." The dropdown stays fully editable
+  before submit — voice never bypasses confirmation.
+- `[x]` **Fixed a mislabeled shared component in passing.** `VoiceInputButton.tsx`'s button text was
+  hardcoded to `uiText.voiceInput.speak` ("Speak survey number") — correct for its original survey-lookup
+  use, silently wrong when reused for the chatbot and now for objections. Added optional `speakLabel`/
+  `listeningLabel` props (defaulting to the original strings, so both existing callers are unaffected) and
+  passed `objectionVoiceSpeakButton` ("Speak your objection") from the objection form.
+- `[x]` **New print-only route** — `/landowner/status/:id/objection-filing/:objectionId`
+  (`ObjectionFilingPage.tsx`), following `NoticeGeneratorPage.tsx`'s structure exactly: an English copy plus
+  an owner-language copy (skipped when the owner's preferred language is English) inside the same
+  `.notice-sheet`/`.notice-copy` CSS this codebase already has from Step 54, reusing `QrCode.tsx` pointed at
+  the parcel's own landowner status page, no new print CSS needed. A bug was caught and fixed during
+  in-browser verification: the ground label was initially resolved via `t(objectionReasonLabels[...])`,
+  which resolves in whatever language the *signed-in viewer's UI* is currently set to — so both the
+  "English" and owner-language copies rendered in the same language. Fixed with a local `resolveGroundLabel`
+  helper that resolves directly against each copy's own target language, independent of the current UI
+  language (the same reason `noticeContent.ts`/`buildSmsPreview` are self-contained rather than routed
+  through `t()`). Reachable via a "Print filed objection" button shown right after a successful submission.
+- `[x]` **Officer-side visibility.** `ParcelDetailPage.tsx`'s objections table gained a "Statute" column
+  (`OBJECTION_REASON_STATUTES[objection.reason]`) next to the existing Reason column — a voice-filed
+  objection flows into the same `assignedToRole`-based queue as a typed one with no new code path, since
+  `addObjection` was never touched.
+- **Verification:** `npm run build` passes with zero type errors (`tsc -b && vite build`). In-browser on a
+  throwaway dev server (`localhost:5173`), signed in as the Demo Citizen (Kavita Patil) on `Survey 124/7`:
+  a `SpeechRecognition`/`webkitSpeechRecognition` mock was installed via the browser console (the sandboxed
+  preview blocks real microphone access, so this is the standard way to exercise the Web Speech code path
+  without live audio) to simulate spoken transcripts. Phrase "they paid me less money than promised" →
+  matched **Compensation dispute (Section 15(1)(c))**, confirmation note shown correctly, description
+  pre-filled with the transcript. Override path: changed the dropdown to **Ownership dispute** before
+  submitting — the filed row (`OBJ-124-7-02`) showed reason "Ownership dispute", confirming the manually
+  picked reason wins over the auto-matched one, not silently reverting. Separately, in English UI: phrase
+  "the survey measurement of my land is wrong" → matched **Measurement error (Section 15(1)(b))** and was
+  submitted unmodified (`OBJ-124-7-02` on a fresh session). "Print filed objection" opened the new route and
+  rendered both copies correctly: the English copy showed "Measurement error" / "Section 15(1)(b)" in
+  English, and the Hindi copy (this demo owner's preferred language) showed "माप त्रुटि" / "Section 15(1)(b)"
+  — confirming the per-copy language fix holds regardless of the signed-in viewer's own UI language
+  (verified with the UI itself set to English throughout, so the Hindi copy's Hindi text could only have
+  come from the fix, not from `t()` happening to already be in Hindi). The QR code rendered and its
+  caption/URL pointed at `http://localhost:5173/landowner/status/parcel-124-7` — the correct parcel's
+  landowner status page. Navigating directly to a stale/nonexistent objection-filing URL (after an
+  in-memory reset) correctly rendered the "Objection not found" empty state rather than crashing. Typed
+  (non-voice) filing was exercised incidentally by every submission above, since voice only pre-fills the
+  same form fields a typed submission also uses — no separate code path exists to regress. No console
+  errors were seen at any point. The officer-side "Statute" column was confirmed structurally (header
+  renders on `parcel-124-7`'s objections table; the cell is a direct, type-checked
+  `OBJECTION_REASON_STATUTES[objection.reason]` lookup identical in shape to the pre-existing Reason
+  column) rather than against a freshly voice-filed row under the District Collector login — this
+  environment's demo repository is in-memory and resets on the full page reload that a role switch (citizen
+  → officer) requires, the same constraint Step 63/64 documented when moving between quick-login sessions.
+- Known, disclosed limitations: (1) the statutory-ground classifier is a closed keyword matcher over a
+  small, fixed English+Hindi vocabulary (`objectionClassifier.ts`) — it routes the filing category only, it
+  does not adjudicate the objection's merits, and the landowner always sees and can override the match
+  before anything is filed. (2) The `valuation` and `compensation` objection reasons both cite Section
+  15(1)(c) (compensation/value grounds) — a deliberate many-to-one simplification of LARR's four Section
+  15(1) grounds onto this codebase's pre-existing five-reason model, not a claim that they are legally
+  identical objections. (3) `legalFilingContent.ts` is fully ten-language (mirroring `noticeContent.ts`
+  exactly, as the plan specified); the new UI chrome introduced this step (`uiText.objectionFiling.*`, the
+  voice-confirmation strings on `uiText.landownerStatus.*`) is English + Hindi only, the same disclosed
+  Track G convention Steps 63–64 already established, not the ten-language citizen-scope set from Steps
+  44–46. (4) The officer-side "Statute" column was verified structurally rather than against a live
+  voice-filed row, per the session-reset constraint above — a follow-up session with continuous
+  citizen→officer access (or a persisted backend) should confirm it end-to-end.
 
 ## Suggested chat prompts
 

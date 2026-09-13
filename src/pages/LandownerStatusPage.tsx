@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { SpeakButton } from '../components/SpeakButton';
+import { VoiceInputButton } from '../components/VoiceInputButton';
 import {
   Badge,
   Button,
@@ -18,10 +19,13 @@ import {
   ACQUISITION_STAGES,
   DEMO_REFERENCE_DATE,
   OBJECTION_REASONS,
+  OBJECTION_REASON_STATUTES,
   STAGE_HANDLER_ROLE,
   getAdvanceGate,
+  getLapseStatus,
   getParcelCalculatedStatus,
   getStageDefinition,
+  matchObjectionGround,
   type AcquisitionParcel,
   type ObjectionReason,
 } from '../domain';
@@ -29,13 +33,14 @@ import { useLanguage } from '../i18n/LanguageContext';
 import {
   dashboardStatusLabels,
   documentKindLabels,
+  lapseRiskLabels,
   objectionReasonLabels,
   objectionStatusLabels,
   stageLabels,
   stageShortLabels,
   uiText,
 } from '../i18n/translations';
-import { getBadgeTone, getStatusIcon } from './statusDisplay';
+import { getBadgeTone, getLapseMonthsElapsed, getLapseRiskIcon, getStatusIcon } from './statusDisplay';
 
 export function LandownerStatusPage() {
   const { id } = useParams<{ id: string }>();
@@ -50,6 +55,12 @@ export function LandownerStatusPage() {
   const [isSubmittingObjection, setIsSubmittingObjection] = useState(false);
   const [objectionError, setObjectionError] = useState<string | undefined>(undefined);
   const [objectionMessage, setObjectionMessage] = useState<string | undefined>(undefined);
+  // Step 65: voice-filed objections show what was heard and which ground it
+  // was matched to (or that no ground matched) so the landowner can confirm
+  // or override before submitting — voice only ever pre-fills the form.
+  const [voiceTranscript, setVoiceTranscript] = useState<string | undefined>(undefined);
+  const [voiceMatchedReason, setVoiceMatchedReason] = useState<ObjectionReason | undefined>(undefined);
+  const [filedObjectionId, setFiledObjectionId] = useState<string | undefined>(undefined);
 
   const [calcArea, setCalcArea] = useState('');
   const [calcRate, setCalcRate] = useState('');
@@ -91,6 +102,7 @@ export function LandownerStatusPage() {
 
   const calculatedStatus = useMemo(() => (parcel ? getParcelCalculatedStatus(parcel) : undefined), [parcel]);
   const advanceGate = useMemo(() => (parcel ? getAdvanceGate(parcel) : undefined), [parcel]);
+  const lapseStatus = useMemo(() => (parcel ? getLapseStatus(parcel) : undefined), [parcel]);
 
   useEffect(() => {
     if (!parcel) {
@@ -128,6 +140,7 @@ export function LandownerStatusPage() {
     setIsSubmittingObjection(true);
     setObjectionError(undefined);
     setObjectionMessage(undefined);
+    setFiledObjectionId(undefined);
 
     try {
       const objection = await repository.addObjection({
@@ -141,6 +154,9 @@ export function LandownerStatusPage() {
       const refreshedParcel = await repository.getParcelById(parcel.id);
       setParcel(refreshedParcel);
       setObjectionDescription('');
+      setVoiceTranscript(undefined);
+      setVoiceMatchedReason(undefined);
+      setFiledObjectionId(objection.id);
       setObjectionMessage(
         `${t(uiText.landownerStatus.objectionSubmittedPrefix)} ${objection.id} ${t(uiText.landownerStatus.objectionSubmittedSuffix)}`,
       );
@@ -149,6 +165,21 @@ export function LandownerStatusPage() {
     } finally {
       setIsSubmittingObjection(false);
     }
+  }
+
+  // Step 65: voice never bypasses the landowner's confirmation — it only
+  // pre-selects the dropdown and pre-fills the description from the
+  // transcript. They can still pick a different reason before submitting.
+  function handleVoiceObjectionResult(transcript: string) {
+    setVoiceTranscript(transcript);
+    setObjectionDescription(transcript);
+    const matchedGround = matchObjectionGround(transcript);
+    setVoiceMatchedReason(matchedGround);
+    if (matchedGround) {
+      setObjectionReason(matchedGround);
+    }
+    setObjectionMessage(undefined);
+    setObjectionError(undefined);
   }
 
   if (isLoading) {
@@ -225,6 +256,22 @@ export function LandownerStatusPage() {
     uiText.landownerStatus.status,
   )}: ${statusLabel}. ${t(uiText.landownerStatus.actionRequired)}: ${actionRequired}`;
 
+  const lapseKillShotText =
+    lapseStatus && lapseStatus.risk !== 'safe'
+      ? t(
+          lapseStatus.risk === 'lapsed'
+            ? uiText.lapseClock.lapsedKillShotTemplate
+            : uiText.lapseClock.approachingKillShotTemplate,
+        )
+          .replace('{amount}', parcel.compensationEstimate.toLocaleString(language === 'hi' ? 'hi-IN' : 'en-IN'))
+          .replace('{months}', String(getLapseMonthsElapsed(lapseStatus)))
+          .replace('{days}', String(Math.abs(lapseStatus.daysRemaining)))
+          .replace(
+            '{statute}',
+            t(lapseStatus.statute === 'section_24' ? uiText.lapseClock.statuteSection24 : uiText.lapseClock.statuteSection19),
+          )
+      : undefined;
+
   return (
     <PageContainer>
       <PageHeader
@@ -242,6 +289,16 @@ export function LandownerStatusPage() {
           </>
         }
       />
+
+      {lapseStatus && lapseStatus.risk !== 'safe' && (
+        <div className={`lapse-banner lapse-banner-${lapseStatus.risk}`} role="alert">
+          <span className="lapse-banner-title">
+            <span aria-hidden="true">{getLapseRiskIcon(lapseStatus.risk)}</span> {t(uiText.lapseClock.landownerBannerTitle)}
+          </span>
+          <span>{lapseKillShotText}</span>
+          <span className="lapse-banner-note">{t(lapseRiskLabels[lapseStatus.risk])}</span>
+        </div>
+      )}
 
       <section className="landowner-grid">
         <Card eyebrow={t(uiText.landownerStatus.overviewEyebrow)} title={t(uiText.landownerStatus.overviewTitle)}>
@@ -371,6 +428,27 @@ export function LandownerStatusPage() {
       </Card>
 
       <Card eyebrow={t(uiText.landownerStatus.objectionFormEyebrow)} title={t(uiText.landownerStatus.objectionFormTitle)}>
+        <p role="note">{t(uiText.landownerStatus.objectionVoicePrompt)}</p>
+        <VoiceInputButton
+          onResult={handleVoiceObjectionResult}
+          speakLabel={t(uiText.landownerStatus.objectionVoiceSpeakButton)}
+        />
+        {voiceTranscript && (
+          <p className="voice-objection-heard" role="status">
+            {t(uiText.landownerStatus.objectionVoiceHeardPrefix)} “{voiceTranscript}”
+            {voiceMatchedReason ? (
+              <>
+                {' '}
+                — {t(uiText.landownerStatus.objectionVoiceFiledUnderPrefix)} {t(objectionReasonLabels[voiceMatchedReason])} (
+                {OBJECTION_REASON_STATUTES[voiceMatchedReason]}).
+              </>
+            ) : (
+              <> {t(uiText.landownerStatus.objectionVoiceNoGroundMatched)}</>
+            )}
+            <br />
+            {t(uiText.landownerStatus.objectionVoiceOverrideNote)}
+          </p>
+        )}
         <form
           className="filter-grid"
           onSubmit={(event) => {
@@ -402,6 +480,13 @@ export function LandownerStatusPage() {
         </form>
         {objectionMessage && <p role="status">{objectionMessage}</p>}
         {objectionError && <p role="alert">{objectionError}</p>}
+        {filedObjectionId && (
+          <Link to={`/landowner/status/${parcel.id}/objection-filing/${filedObjectionId}`}>
+            <Button type="button" variant="secondary">
+              {t(uiText.landownerStatus.printFiledObjectionButton)}
+            </Button>
+          </Link>
+        )}
       </Card>
 
       <Card

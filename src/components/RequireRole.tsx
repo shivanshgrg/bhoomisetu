@@ -8,16 +8,16 @@ type RequireRoleProps = {
   children: ReactNode;
 };
 
-// Route guard for the official-side portal. No session at all sends the
-// visitor back to the landing page's sign-in picker; a signed-in session
-// whose role isn't allowed for this particular route shows Access Restricted
-// instead of the real page/data. Landowner routes never use this component —
-// that portal is intentionally anonymous/login-free.
+// Route guard for both the official-side portal and (Step 62 Part A) the
+// landowner portal. No session at all sends the visitor to /auth; a
+// signed-in session whose role isn't allowed for this particular route shows
+// Access Restricted instead of the real page/data — e.g. an officer session
+// hitting a landowner route, or vice versa.
 export function RequireRole({ allowedRoles, children }: RequireRoleProps) {
   const { session } = useSession();
 
   if (!session) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   if (!allowedRoles.includes(session.role)) {
