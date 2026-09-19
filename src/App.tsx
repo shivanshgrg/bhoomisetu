@@ -9,7 +9,6 @@ import { AuthPage } from './pages/AuthPage';
 import { BulkImportPage } from './pages/BulkImportPage';
 import { CompensationPage } from './pages/CompensationPage';
 import { DocumentReviewQueuePage } from './pages/DocumentReviewQueuePage';
-import { DemoModePage } from './pages/DemoModePage';
 import { LandingPage } from './pages/LandingPage';
 import { LandownerPage } from './pages/LandownerPage';
 import { LandownerStatusPage } from './pages/LandownerStatusPage';
@@ -59,7 +58,6 @@ export default function App() {
           <Route path="parcel/:id/audit-export" element={<AuditExportPage />} />
           <Route path="action-center" element={<ActionCenterPage />} />
           <Route path="document-review" element={<DocumentReviewQueuePage />} />
-          <Route path="demo" element={<DemoModePage />} />
           <Route path="compensation" element={<CompensationPage />} />
           <Route path="r-and-r" element={<RAndRPage />} />
           <Route path="reports" element={<ReportsPage />} />

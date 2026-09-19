@@ -5,9 +5,10 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { useTheme } from '../../theme/ThemeContext';
 
 const SECTION_LINKS = [
-  { href: '#portals', label: { en: 'Portals', hi: 'पोर्टल' } },
+  { href: '#about', label: { en: 'About', hi: 'परिचय' } },
   { href: '#journey', label: { en: 'Process', hi: 'प्रक्रिया' } },
-  { href: '#capabilities', label: { en: 'Capabilities', hi: 'क्षमताएं' } },
+  { href: '#services', label: { en: 'Services', hi: 'सेवाएं' } },
+  { href: '#faqs', label: { en: 'FAQs', hi: 'सामान्य प्रश्न' } },
 ];
 
 export function LandingNav() {
@@ -20,7 +21,11 @@ export function LandingNav() {
     <header className="bs-nav">
       <div className="bs-nav-inner">
         <a className="bs-nav-wordmark" href="#top" aria-label="BhoomiSetu home">
-          BhoomiSetu
+          <img src="/icons/icon.svg" alt="" aria-hidden="true" />
+          <span>
+            BhoomiSetu
+            <small>{language === 'hi' ? 'भूमि अधिग्रहण और पुनर्वास पोर्टल' : 'Land Acquisition & Rehabilitation Portal'}</small>
+          </span>
         </a>
         <nav className="bs-nav-links" aria-label="Section navigation">
           {SECTION_LINKS.map((link) => (
