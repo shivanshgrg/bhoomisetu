@@ -332,13 +332,16 @@
   align-items: end;
 }
 
-.bs-india-visual { position: relative; grid-column: 1 / -1; display: grid; grid-template-columns: 150px 1fr; align-items: end; gap: 20px; max-width: 430px; margin-left: auto; padding: 18px; border: 1px solid var(--line); background: color-mix(in srgb, var(--sheet) 82%, transparent); }
+.bs-india-visual { position: relative; grid-column: 1 / -1; display: grid; grid-template-columns: 150px 1fr; align-items: end; gap: 20px; max-width: 430px; margin-left: auto; padding: 18px; border: 1px solid var(--line); background: color-mix(in srgb, var(--sheet) 82%, transparent); overflow: hidden; }
+.bs-india-visual::before { content: ''; position: absolute; inset: -40% auto auto 54%; width: 220px; height: 220px; border: 1px solid var(--line); border-radius: 50%; box-shadow: 0 0 0 24px color-mix(in srgb, var(--amber-lt) 17%, transparent), 0 0 0 48px color-mix(in srgb, var(--amber-lt) 10%, transparent); }
 .bs-india-visual svg { width: 132px; height: 158px; filter: drop-shadow(0 10px 16px rgba(22,20,14,.12)); }
 .bs-india-visual path:first-child { fill: var(--amber-lt); stroke: var(--amber-2); stroke-width: 6; stroke-linejoin: round; }
 .bs-india-route { fill: none; stroke: var(--ink); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 5 12; }
 .bs-india-visual circle { fill: var(--amber-2); stroke: var(--sheet); stroke-width: 5; }
 .bs-india-caption { display: grid; gap: 5px; padding-bottom: 16px; }
 .bs-india-caption strong { font-size: 1rem; font-weight: 600; }.bs-india-caption span { color: var(--ink-2); font-size: .84rem; }
+.bs-india-signal { position: absolute; right: 16px; bottom: 12px; display: flex; align-items: center; gap: 7px; color: var(--ink-2); font-size: .68rem; }.bs-signal-dot { width: 7px; height: 7px; border-radius: 50%; background: #3e8556; box-shadow: 0 0 0 4px color-mix(in srgb, #3e8556 16%, transparent); }
+.bs-hero-ribbon { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 18px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }.bs-hero-ribbon > div { display: grid; grid-template-columns: 31px 1fr; column-gap: 10px; padding: 16px; border-right: 1px solid var(--line); }.bs-hero-ribbon > div:last-child { border-right: 0; }.bs-hero-ribbon span { grid-row: span 2; color: var(--amber-2); font: 600 .72rem ui-monospace, monospace; }.bs-hero-ribbon strong { font-size: .9rem; }.bs-hero-ribbon small { margin-top: 3px; color: var(--ink-2); font-size: .76rem; }
 
 .bs-hero h1 {
   font-size: var(--fs-display);

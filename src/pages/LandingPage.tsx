@@ -116,6 +116,12 @@ export function LandingPage() {
                 <circle cx="153" cy="107" r="8" /><circle cx="193" cy="255" r="8" /><circle cx="235" cy="406" r="8" />
               </svg>
               <div className="bs-india-caption"><strong>One connected acquisition system</strong><span>From national oversight to parcel action</span></div>
+              <div className="bs-india-signal"><span className="bs-signal-dot" /> <span>Coordinated · transparent · accountable</span></div>
+            </div>
+            <div className="bs-hero-ribbon" aria-label="Platform capabilities">
+              <div><span>01</span><strong>Role-aware access</strong><small>Every user sees the right level of detail.</small></div>
+              <div><span>02</span><strong>Seven-stage workflow</strong><small>Clear gates and documented next actions.</small></div>
+              <div><span>03</span><strong>Citizen visibility</strong><small>Landowners can follow their own case.</small></div>
             </div>
           </div>
         </section>
