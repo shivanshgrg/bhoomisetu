@@ -7,6 +7,9 @@ import { ActionCenterPage } from './pages/ActionCenterPage';
 import { AuditExportPage } from './pages/AuditExportPage';
 import { AuthPage } from './pages/AuthPage';
 import { BulkImportPage } from './pages/BulkImportPage';
+import { CompensationPage } from './pages/CompensationPage';
+import { DocumentReviewQueuePage } from './pages/DocumentReviewQueuePage';
+import { DemoModePage } from './pages/DemoModePage';
 import { LandingPage } from './pages/LandingPage';
 import { LandownerPage } from './pages/LandownerPage';
 import { LandownerStatusPage } from './pages/LandownerStatusPage';
@@ -15,7 +18,9 @@ import { NoticeGeneratorPage } from './pages/NoticeGeneratorPage';
 import { ObjectionFilingPage } from './pages/ObjectionFilingPage';
 import { OfficialPage } from './pages/OfficialPage';
 import { ParcelDetailPage } from './pages/ParcelDetailPage';
+import { ProjectCommandCenterPage } from './pages/ProjectCommandCenterPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { RAndRPage } from './pages/RAndRPage';
 import type { AppRole } from './domain';
 
 // Any signed-in official-side role except landowner. `official`/`parcel/:id`
@@ -48,10 +53,15 @@ export default function App() {
               </RequireRole>
             }
           />
-          <Route path="parcel/:id" element={<ParcelDetailPage />} />
+          <Route path="parcel/:id" element={<RequireRole allowedRoles={['field_officer']}><ParcelDetailPage /></RequireRole>} />
+          <Route path="project/:id" element={<ProjectCommandCenterPage />} />
           <Route path="parcel/:id/notice" element={<NoticeGeneratorPage />} />
           <Route path="parcel/:id/audit-export" element={<AuditExportPage />} />
           <Route path="action-center" element={<ActionCenterPage />} />
+          <Route path="document-review" element={<DocumentReviewQueuePage />} />
+          <Route path="demo" element={<DemoModePage />} />
+          <Route path="compensation" element={<CompensationPage />} />
+          <Route path="r-and-r" element={<RAndRPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
           <Route path="*" element={<OfficialPage />} />

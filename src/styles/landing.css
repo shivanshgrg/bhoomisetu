@@ -332,6 +332,14 @@
   align-items: end;
 }
 
+.bs-india-visual { position: relative; grid-column: 1 / -1; display: grid; grid-template-columns: 150px 1fr; align-items: end; gap: 20px; max-width: 430px; margin-left: auto; padding: 18px; border: 1px solid var(--line); background: color-mix(in srgb, var(--sheet) 82%, transparent); }
+.bs-india-visual svg { width: 132px; height: 158px; filter: drop-shadow(0 10px 16px rgba(22,20,14,.12)); }
+.bs-india-visual path:first-child { fill: var(--amber-lt); stroke: var(--amber-2); stroke-width: 6; stroke-linejoin: round; }
+.bs-india-route { fill: none; stroke: var(--ink); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 5 12; }
+.bs-india-visual circle { fill: var(--amber-2); stroke: var(--sheet); stroke-width: 5; }
+.bs-india-caption { display: grid; gap: 5px; padding-bottom: 16px; }
+.bs-india-caption strong { font-size: 1rem; font-weight: 600; }.bs-india-caption span { color: var(--ink-2); font-size: .84rem; }
+
 .bs-hero h1 {
   font-size: var(--fs-display);
   font-weight: 600;

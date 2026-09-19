@@ -16,6 +16,7 @@ import {
 import { AuditChainLedger } from '../components/AuditChainLedger';
 import { SmsPreviewPanel } from '../components/SmsPreviewPanel';
 import { repository } from '../data';
+import { recordWorkflowEvent } from '../data/workflowEvents';
 import { analyzeImageFile } from '../data/imageAnalysis';
 import { runOcr } from '../data/ocr';
 import { extractPdfText } from '../data/pdfText';
@@ -61,6 +62,7 @@ import {
   type DocumentCheckResult,
   type DocumentCheckSignal,
   type DocumentKind,
+  type DocumentStatus,
   type ObjectionStatus,
   type OfficialRole,
   type StageId,
@@ -205,6 +207,7 @@ export function ParcelDetailPage() {
         enteredOn: DEMO_REFERENCE_DATE,
       });
       setParcel(updatedParcel);
+      recordWorkflowEvent({ parcelId: parcel.id, kind: 'stage_advanced', message: `Your parcel moved to ${t(stageLabels[updatedParcel.currentStage])}.` });
       setAdvanceNote('');
       setAdvanceMessage(`${t(uiText.parcelDetail.movedToPrefix)} ${t(stageLabels[updatedParcel.currentStage])}.`);
     } catch {
@@ -226,6 +229,7 @@ export function ParcelDetailPage() {
       await repository.updateObjectionStatus({ objectionId, status, updatedOn: DEMO_REFERENCE_DATE });
       const refreshedParcel = await repository.getParcelById(parcel.id);
       setParcel(refreshedParcel);
+      recordWorkflowEvent({ parcelId: parcel.id, kind: status === 'resolved' ? 'objection_resolved' : 'objection_filed', message: status === 'resolved' ? 'Your objection has been resolved.' : 'Your objection status was updated.' });
     } catch {
       setObjectionStatusError(t(uiText.parcelDetail.objectionStatusErrorMessage));
     } finally {
@@ -241,6 +245,7 @@ export function ParcelDetailPage() {
     setVerifyingDocumentId(documentId);
     setDocumentActionError(undefined);
 
+    const documentKind = parcel.documents.find((document) => document.id === documentId)?.kind;
     try {
       await repository.verifyDocument({
         documentId,
@@ -250,6 +255,7 @@ export function ParcelDetailPage() {
       });
       const refreshedParcel = await repository.getParcelById(parcel.id);
       setParcel(refreshedParcel);
+      recordWorkflowEvent({ parcelId: parcel.id, kind: 'document_verified', message: `A ${t(documentKindLabels[documentKind ?? 'valuation_report'])} was verified.` });
     } catch {
       setDocumentActionError(t(uiText.parcelDetail.verifyErrorMessage));
     } finally {
@@ -287,6 +293,7 @@ export function ParcelDetailPage() {
       });
       const refreshedParcel = await repository.getParcelById(parcel.id);
       setParcel(refreshedParcel);
+      recordWorkflowEvent({ parcelId: parcel.id, kind: 'document_rejected', message: 'A submitted document needs correction before this stage can proceed.' });
       setRejectingDocumentId(undefined);
       setRejectReason('');
     } catch {
@@ -367,6 +374,7 @@ export function ParcelDetailPage() {
       });
       const refreshedParcel = await repository.getParcelById(parcel.id);
       setParcel(refreshedParcel);
+      recordWorkflowEvent({ parcelId: parcel.id, kind: 'document_submitted', message: `A ${t(documentKindLabels[uploadKind])} was submitted for verification.` });
       setLastCheckResult(checkResult);
       setUploadTitle('');
       setUploadFile(undefined);
@@ -443,6 +451,18 @@ export function ParcelDetailPage() {
 
   const currentStageOrder = getStageDefinition(parcel.currentStage).order;
   const documentsForStage = getDocumentsForStage(parcel);
+  const currentStageRequirements = getStageDefinition(parcel.currentStage).requiredDocumentKinds.map((kind) => {
+    const candidates = parcel.documents.filter(
+      (document) => document.stage === parcel.currentStage && document.kind === kind,
+    );
+    // This priority mirrors the advance gate: only a verified document clears a requirement.
+    const document =
+      candidates.find((candidate) => candidate.status === 'verified') ??
+      candidates.find((candidate) => candidate.status === 'pending_verification') ??
+      candidates.find((candidate) => candidate.status === 'rejected');
+
+    return { kind, document, status: (document?.status ?? 'missing') as DocumentStatus | 'missing' };
+  });
 
   const documentRows = documentsPagination.pageItems.map((document) => [
     t(stageShortLabels[document.stage]),
@@ -609,6 +629,58 @@ export function ParcelDetailPage() {
         </div>
       )}
 
+      <section className="parcel-command-strip" aria-label={t(uiText.parcelDetail.commandSummaryLabel)}>
+        <div className="parcel-command-cell">
+          <span>{t(uiText.parcelDetail.currentStageLabel)}</span>
+          <strong>{currentStageLabel}</strong>
+        </div>
+        <div className="parcel-command-cell">
+          <span>{t(uiText.parcelDetail.statusLabel)}</span>
+          <Badge tone={getBadgeTone(calculatedStatus.status)}>{dashboardStatusLabel}</Badge>
+        </div>
+        <div className="parcel-command-cell">
+          <span>{t(uiText.parcelDetail.commandRiskLabel)}</span>
+          {riskAssessment ? (
+            <Badge tone={getRiskTone(riskAssessment.level)}>{t(riskLevelLabels[riskAssessment.level])}</Badge>
+          ) : (
+            '—'
+          )}
+        </div>
+        <div className="parcel-command-cell parcel-command-project">
+          <span>{t(uiText.parcelDetail.commandProjectLabel)}</span>
+          {project ? (
+            <Link to={`/official/project/${project.id}`}>{project.name}</Link>
+          ) : (
+            '—'
+          )}
+        </div>
+      </section>
+
+      <section
+        className={`current-action-card ${advanceGate.canAdvance ? 'is-ready' : advanceGate.toStage ? 'is-blocked' : 'is-complete'}`}
+        aria-labelledby="current-action-title"
+      >
+        <div>
+          <p className="eyebrow">{t(uiText.parcelDetail.actionEyebrow)}</p>
+          <h2 id="current-action-title">
+            {advanceGate.canAdvance
+              ? t(uiText.parcelDetail.commandReadyTitle)
+              : advanceGate.toStage
+                ? t(uiText.parcelDetail.commandActionRequiredTitle)
+                : t(uiText.parcelDetail.workflowCompleteTitle)}
+          </h2>
+          <p>{getAdvanceGateReasonText(parcel.currentStage, calculatedStatus, advanceGate, t)}</p>
+          {riskAssessment && <p className="current-action-recommendation">{riskAssessment.recommendedAction}</p>}
+        </div>
+        {advanceGate.toStage && (
+          <a className="btn btn-secondary" href={advanceGate.canAdvance ? '#advance-workflow' : '#current-stage-documents'}>
+            {advanceGate.canAdvance
+              ? `${t(uiText.parcelDetail.advanceToButtonPrefix)} ${t(stageLabels[advanceGate.toStage])}`
+              : t(uiText.parcelDetail.openChecklistButton)}
+          </a>
+        )}
+      </section>
+
       <section className="landowner-grid">
         <Card eyebrow={t(uiText.parcelDetail.overviewEyebrow)} title={t(uiText.parcelDetail.overviewTitle)}>
           <div className="status-list">
@@ -728,6 +800,7 @@ export function ParcelDetailPage() {
         </ol>
       </Card>
 
+      <section id="advance-workflow">
       <Card eyebrow={t(uiText.parcelDetail.actionEyebrow)} title={t(uiText.parcelDetail.advanceWorkflowTitle)}>
         {advanceGate.canAdvance ? (
           <>
@@ -781,6 +854,33 @@ export function ParcelDetailPage() {
           event={{ kind: 'stage_advance', surveyNumber: parcel.surveyNumber, stage: parcel.currentStage }}
         />
       </Card>
+      </section>
+
+      <section id="current-stage-documents">
+        <Card
+          eyebrow={t(uiText.parcelDetail.currentStageDocumentsEyebrow)}
+          title={`${currentStageLabel} — ${t(uiText.parcelDetail.currentStageDocumentsTitle)}`}
+        >
+          <div className="document-checklist">
+            {currentStageRequirements.map(({ kind, document, status }) => (
+              <div className="document-checklist-row" key={kind}>
+                <div>
+                  <strong>{t(documentKindLabels[kind])}</strong>
+                  <span>
+                    {document ? document.title : t(uiText.parcelDetail.documentMissingRequired)}
+                  </span>
+                </div>
+                <Badge tone={status === 'missing' ? 'danger' : getDocumentStatusTone(status)}>
+                  {status === 'missing' ? t(uiText.parcelDetail.documentMissingRequired) : t(documentStatusLabels[status])}
+                </Badge>
+              </div>
+            ))}
+          </div>
+          <a className="text-link" href="#documents">
+            {t(uiText.parcelDetail.reviewDocumentsBelow)}
+          </a>
+        </Card>
+      </section>
 
       <Card eyebrow={t(uiText.auditChain.eyebrow)} title={t(uiText.auditChain.title)}>
         <p>{t(uiText.auditChain.description)}</p>
@@ -887,6 +987,7 @@ export function ParcelDetailPage() {
         {uploadError && <p>{uploadError}</p>}
       </Card>
 
+      <section id="documents">
       <Card
         eyebrow={`${documentsForStage.length} ${t(uiText.parcelDetail.documentsEyebrowSuffix)}`}
         title={t(uiText.parcelDetail.documentsTitle)}
@@ -927,6 +1028,7 @@ export function ParcelDetailPage() {
         )}
         {documentActionError && <p>{documentActionError}</p>}
       </Card>
+      </section>
 
       <Card
         eyebrow={`${parcel.objections.length} ${t(uiText.parcelDetail.objectionsEyebrowSuffix)}`}

@@ -59,7 +59,8 @@ export function VoiceInputButton({ onResult, speakLabel, listeningLabel }: Voice
 
     setError(undefined);
     const recognition = new RecognitionConstructor();
-    recognition.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
+    const speechLocales = { en: 'en-IN', hi: 'hi-IN', mr: 'mr-IN', bn: 'bn-IN', te: 'te-IN', ta: 'ta-IN', gu: 'gu-IN', kn: 'kn-IN', or: 'or-IN', pa: 'pa-IN' } as const;
+    recognition.lang = speechLocales[language];
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognition.continuous = false;

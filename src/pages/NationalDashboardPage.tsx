@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ParcelMap } from '../components/ParcelMap';
 import { ProjectTimeline } from '../components/ProjectTimeline';
 import { TimeTravelScrubber } from '../components/TimeTravelScrubber';
 import { Badge, Card, DataTable, EmptyState, PageContainer, PageHeader } from '../components/ui';
@@ -10,9 +12,11 @@ import { useSession } from '../i18n/SessionContext';
 import { appRoleLabels, projectStatusLabels, uiText } from '../i18n/translations';
 import {
   DEMO_REFERENCE_DATE,
+  ACQUISITION_STAGES,
   PROJECT_SECTOR_LABELS,
   STATE_NAME_LABELS,
   getLapseStatus,
+  getActionCenterQueue,
   getNationalSummary,
   getParcelsStateAsOf,
   scopeParcelsToSession,
@@ -21,7 +25,8 @@ import {
   type AcquisitionProject,
   type ISODateString,
 } from '../domain';
-import { getProjectStatusIcon, getProjectStatusTone } from './statusDisplay';
+import { getProjectStatusIcon, getProjectStatusTone, getRiskTone } from './statusDisplay';
+import { stageShortLabels } from '../i18n/translations';
 
 const SCRUBBER_DEBOUNCE_MS = 150;
 
@@ -128,12 +133,39 @@ export function NationalDashboardPage() {
       ? Math.round((rAndRTotals.familiesResettled / rAndRTotals.displacedFamilies) * 100)
       : 0;
 
+  const portfolioProgress =
+    nationalSummary.areaNotifiedHectares > 0
+      ? Math.round((nationalSummary.areaAcquiredHectares / nationalSummary.areaNotifiedHectares) * 100)
+      : 0;
+
+  const stageCounts = useMemo(
+    () =>
+      ACQUISITION_STAGES.reduce<Record<(typeof ACQUISITION_STAGES)[number]['id'], number>>(
+        (counts, stage) => {
+          counts[stage.id] = snapshotParcels.filter((parcel) => parcel.currentStage === stage.id).length;
+          return counts;
+        },
+        {} as Record<(typeof ACQUISITION_STAGES)[number]['id'], number>,
+      ),
+    [snapshotParcels],
+  );
+
+  const intervention = useMemo(() => {
+    const queue = getActionCenterQueue(snapshotParcels, scopedProjects, debouncedScrubberDate);
+    return {
+      critical: queue.filter((entry) => entry.riskAssessment.level === 'critical' || entry.riskAssessment.level === 'high').length,
+      missingDocuments: queue.filter((entry) => entry.riskAssessment.contributors.some((item) => item.label === 'Missing documents' && item.points > 0)).length,
+      lapse: snapshotParcels.filter((parcel) => getLapseStatus(parcel).risk !== 'safe').length,
+      top: queue.slice(0, 3),
+    };
+  }, [snapshotParcels, scopedProjects, debouncedScrubberDate]);
+
   const rAndRRows = scopedProjects.map((project) => {
     const displaced = project.rAndR.displacedFamilies;
     const resettledPercent = displaced > 0 ? Math.round((project.rAndR.familiesResettled / displaced) * 100) : 0;
 
     return [
-      project.name,
+      <Link key={`${project.id}-project`} to={`/official/project/${project.id}`}>{project.name}</Link>,
       STATE_NAME_LABELS[project.state],
       project.rAndR.affectedFamilies.toLocaleString('en-IN'),
       project.rAndR.displacedFamilies.toLocaleString('en-IN'),
@@ -153,7 +185,7 @@ export function NationalDashboardPage() {
     }
 
     return [
-      project.name,
+      <Link key={`${project.id}-progress`} to={`/official/project/${project.id}`}>{project.name}</Link>,
       STATE_NAME_LABELS[project.state],
       PROJECT_SECTOR_LABELS[project.sector],
       `${formatHectares(status.areaAcquiredHectares)} / ${formatHectares(status.areaNotifiedHectares)}`,
@@ -170,9 +202,9 @@ export function NationalDashboardPage() {
   return (
     <PageContainer>
       <PageHeader
-        eyebrow={t(uiText.nationalDashboard.eyebrow)}
-        title={t(uiText.nationalDashboard.title)}
-        description={t(uiText.nationalDashboard.description)}
+        eyebrow={t(uiText.nationalDashboard.commandEyebrow)}
+        title={t(uiText.nationalDashboard.commandTitle)}
+        description={`${t(uiText.nationalDashboard.commandDescription)} · ${nationalSummary.totalStates} ${t(uiText.nationalDashboard.statesSuffix)}`}
         actions={
           role && (
             <Badge tone="info">
@@ -197,7 +229,7 @@ export function NationalDashboardPage() {
             onChange={setScrubberDate}
           />
 
-          <section className="summary-grid" aria-label="National summary">
+          <section className="summary-grid command-kpi-grid" aria-label="National summary">
             <Card eyebrow={t(uiText.nationalDashboard.coverageEyebrow)} title={t(uiText.nationalDashboard.projectsStatesTitle)}>
               <p className="metric">{nationalSummary.totalProjects}</p>
               <p>
@@ -261,6 +293,62 @@ export function NationalDashboardPage() {
               </p>
             </Card>
           </section>
+
+          <section className="national-command-grid" aria-label={t(uiText.nationalDashboard.commandSectionsLabel)}>
+            <Card eyebrow={t(uiText.nationalDashboard.portfolioEyebrow)} title={t(uiText.nationalDashboard.portfolioTitle)}>
+              <div className="portfolio-progress-copy">
+                <strong>{portfolioProgress}%</strong>
+                <span>{formatHectares(nationalSummary.areaAcquiredHectares)} / {formatHectares(nationalSummary.areaNotifiedHectares)}</span>
+              </div>
+              <div className="portfolio-progress-track" aria-label={`${portfolioProgress}% acquisition progress`}>
+                <span style={{ width: `${portfolioProgress}%` }} />
+              </div>
+              <p>{t(uiText.nationalDashboard.portfolioDescription)}</p>
+            </Card>
+
+            <Card
+              eyebrow={t(uiText.nationalDashboard.interventionEyebrow)}
+              title={t(uiText.nationalDashboard.interventionTitle)}
+              action={<Link className="command-inline-link" to="/official/action-center">{t(uiText.nationalDashboard.openQueue)}</Link>}
+            >
+              <div className="intervention-stats">
+                <span><strong>{intervention.critical}</strong>{t(uiText.nationalDashboard.highRiskCases)}</span>
+                <span><strong>{intervention.missingDocuments}</strong>{t(uiText.nationalDashboard.missingDocumentCases)}</span>
+                <span><strong>{intervention.lapse}</strong>{t(uiText.nationalDashboard.lapseRiskCases)}</span>
+              </div>
+              <div className="intervention-list">
+                {intervention.top.map(({ parcel, riskAssessment }) => (
+                  <Link key={parcel.id} to={`/official/parcel/${parcel.id}`}>
+                    <Badge tone={getRiskTone(riskAssessment.level)}>{parcel.surveyNumber} · {riskAssessment.score}/100</Badge>
+                    <span>{riskAssessment.recommendedAction}</span>
+                  </Link>
+                ))}
+              </div>
+            </Card>
+          </section>
+
+          <Card eyebrow={t(uiText.nationalDashboard.pipelineEyebrow)} title={t(uiText.nationalDashboard.pipelineTitle)}>
+            <p>{t(uiText.nationalDashboard.pipelineDescription)}</p>
+            <div className="national-pipeline" aria-label={t(uiText.nationalDashboard.pipelineTitle)}>
+              {ACQUISITION_STAGES.map((stage) => (
+                <Link className="national-pipeline-stage" key={stage.id} to={`/official?stage=${stage.id}`}>
+                  <span>{stage.order.toString().padStart(2, '0')}</span>
+                  <strong>{stageCounts[stage.id]}</strong>
+                  <small>{t(stageShortLabels[stage.id])}</small>
+                </Link>
+              ))}
+            </div>
+          </Card>
+
+          <Card eyebrow={t(uiText.nationalDashboard.mapEyebrow)} title={t(uiText.nationalDashboard.mapTitle)}>
+            {isDataSaverOn ? (
+              <EmptyState title={t(uiText.official.mapHiddenTitle)} description={t(uiText.official.mapHiddenDescription)} />
+            ) : snapshotParcels.length > 0 ? (
+              <ParcelMap parcels={snapshotParcels} projects={scopedProjects} mode="project" asOfDate={debouncedScrubberDate} />
+            ) : (
+              <EmptyState title={t(uiText.official.noParcelsMapTitle)} description={t(uiText.official.adjustFiltersDescription)} />
+            )}
+          </Card>
 
           <Card eyebrow={t(uiText.timeline.eyebrow)} title={t(uiText.timeline.title)}>
             {isLoading ? (

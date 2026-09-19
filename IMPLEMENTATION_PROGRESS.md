@@ -1989,6 +1989,57 @@ bullet in the plan, without a full conflict-resolution system.
 
 ## Suggested chat prompts
 
+### Step 66 — Judge-Ready Command Center baseline
+
+- `[x]` Added `JUDGE_READY_COMMAND_CENTER_PLAN.md`, the new incremental upgrade roadmap for Steps 66–101. It preserves the acquisition-stage engine, role scoping, document gates, risk rules, audit chain, offline queue, language/voice support, and landowner portal while prioritizing a judge-ready command-center story.
+- `[x]` Added `REGRESSION_CHECKLIST.md`, a baseline contract for all subsequent steps. It locks the final demonstration sequence to the Pune–Nagpur Expressway Land Corridor and hero Survey `124/7` (Kavita Patil), which is deterministically in the Valuation stage and blocked by the missing Valuation Report.
+- `[x]` Recorded expected checks for access scoping, landowner flow, document review, advance gates, risk/Action Center, GIS/data saver, reports/audit, communications, and offline behavior. The checklist explicitly requires later changes to reuse current calculations and not claim unconfigured external integrations.
+- **Verification:** baseline production build and browser checks are recorded for this step; subsequent UI upgrades must repeat the listed regression checks before continuing.
+
+### Step 67 — Global design tokens
+
+- `[x]` Refined the existing warm-paper visual system in `src/styles.css` without changing components, routes, data, or workflow logic. Added shared font, spacing, radius, elevation, content-width, and semantic status-surface tokens for both light and dark themes.
+- `[x]` Updated shared surfaces only: the header, page canvas, official shell width, sidebar, cards, grids, panels, inputs, tables, badges, and popovers now consume the refined tokens. Existing warm civic colours and all existing class names remain intact.
+- `[x]` Improved Indic-script fallback support through the global font stack, widened the desktop content canvas from 1080px to 1160px, and strengthened light/dark contrast for status and elevation surfaces.
+- **Verification:** `npm run build` passes (`tsc -b && vite build`). In-browser, the authentication screen and loaded Pune district dashboard rendered correctly in both light and dark modes; the dashboard retained its 13 parcels, 7 stuck parcels, 5 pending uploads, existing seven-stage counts, map, and filters. At a 375px viewport, `document.documentElement.scrollWidth <= window.innerWidth` and visible controls remained available. The responsive viewport and test theme were reset after checking. No console errors were observed.
+
+### Outcome 1 — National Command Center
+
+- `[x]` Reframed `NationalDashboardPage.tsx` as the National Land Acquisition Command Center while retaining every existing rollup calculation, role guard, time-travel view, project timeline, R&R table, and report data source.
+- `[x]` Added a portfolio progress panel, an interactive seven-stage legal pipeline, an Immediate Intervention panel drawn from the existing Action Center/risk/lapse logic, and a larger national GIS panel that reuses the existing `ParcelMap` component with project boundaries, status mode, parcel drill-down, and data-saver fallback.
+- `[x]` Added bilingual English/Hindi copy for the command-center surfaces and responsive styling for the portfolio, intervention, and pipeline panels.
+- `[x]` Added the optional `?stage=<stageId>` dashboard filter. This does not alter filtering logic: it simply selects the current stage filter from a URL, preserving the table/map shared dataset and existing scope restrictions. National/state roles can use this filtered dashboard rather than being redirected to the unfiltered national rollup.
+- **Verification:** `npm run build` passes. In-browser as the Pune District Collector, `/official?stage=valuation` loaded exactly four Valuation parcels (Survey 124/7, 307/5, 308/6, and 310/3), retained the map/table synchronization, and showed 124/7 as stuck with its missing Valuation Report. The local quick-login fixture does not provide a National Admin account, so the national-only page was verified structurally via build/type checks; its data paths reuse the already-tested scoped project, parcel, Action Center, lapse, and map components.
+
+### Outcome 2 — Project Command Center and role-aware GIS
+
+- `[x]` Added `/official/project/:id` and `ProjectCommandCenterPage.tsx`. It uses scoped existing project/parcels only, so unauthorized or out-of-jurisdiction project URLs return a not-found state rather than exposing data.
+- `[x]` The project screen combines project KPIs, the seven-stage parcel pipeline, bottleneck forecast, risk-ranked actions, and the existing GIS parcel drill-down into one useful screen. Project rows now link to it, and pipeline selection preserves both `project` and `stage` filters in the existing parcel dashboard URL.
+- `[x]` Extended `ParcelMap` with role-appropriate overview mode. The National/State Command Center map now renders project boundaries/status and project drill-down only; District/Field and project views retain parcel-level geometry and links inside their existing scope.
+- **Verification:** `npm run build` passes. In-browser as the Pune District Collector, `/official/project/project-maharashtra-corridor` rendered the Pune–Nagpur Expressway Land Corridor KPI header, 13-project-parcel stage counts (2/1/2/4/1/3/0), Valuation bottleneck (16.3 days over SLA), action links including Survey 124/7, and the scoped field GIS map. No console errors were seen.
+
+### Outcome 3 — Parcel and document workflow clarity
+
+- `[x]` Reworked the parcel detail entry area into a command summary: current stage, calculated status, risk, and linked scoped project are visible before the lower-level record cards.
+- `[x]` Added a prominent **Current action required** card. It uses the existing advance-gate reason and risk recommendation, and takes an official either to the exact required-document checklist or to the existing stage-advance form. No acquisition rule was changed.
+- `[x]` Added a current-stage checklist that displays the exact document requirement as Verified, Pending Verification, Rejected, or Missing. It follows the same verified-document priority used by the advance gate and hands off to the already-working upload/review controls below.
+- `[x]` Added `/official/document-review`, a jurisdiction-scoped queue of genuinely pending verification records. Every item opens the existing parcel workspace; it creates no duplicate document data or parallel review action.
+- **Verification:** `npm run build` passes. In-browser as the Pune District Collector, hero Survey 124/7 showed Valuation / Stuck / High / Pune–Nagpur Expressway Land Corridor, then “Current action required: Missing required document: Valuation report” with an Open document checklist link. Its Valuation gate displayed the required Valuation report as missing and linked to the document controls. The new Document Review queue rendered exactly one in-scope pending record (Survey 308/6, Valuation report) and linked it to that parcel’s documents. No console errors were observed.
+
+### Outcome 4 — Compensation and R&R
+
+- `[x]` Added `/official/compensation`: assessed, paid, and remaining amounts are calculated directly from the existing scoped parcel estimates/payments. Its parcel ledger links only to existing scoped parcel workspaces.
+- `[x]` Added `/official/r-and-r`: affected, displaced, and resettled-family totals plus checklist status are calculated from the existing project R&R fields. It intentionally introduces no household-level records or invented data.
+- `[x]` Added both modules to official navigation. Existing National Dashboard R&R content remains available and unchanged.
+- **Verification:** `npm run build` passes (`tsc -b && vite build`) with no type errors. Both routes are protected by the existing official shell/role guard and derive data through the existing session-scoping functions.
+
+### Outcome 5 — Demo Mode and cross-portal updates
+
+- `[x]` Added a presentation-only local workflow-event feed. Successful document submission/verification/rejection, objection updates, and stage advancement record a safe citizen-facing update while leaving audit history and repository contracts untouched.
+- `[x]` Landowner status now shows only these safe case updates; internal review notes, OCR/quality signals, and officer-only details remain absent.
+- `[x]` Added `/official/demo`, a guided walkthrough linking the hero project, hero parcel’s real gate, and the citizen view. Reset is enabled only for the local demo repository: it clears presentation events and reloads the seeded baseline; it is disabled when Supabase is configured.
+- **Verification:** `npm run build` passes (`tsc -b && vite build`) with no type errors. The event feed is additive local presentation state and makes no external notification, payment, identity, GIS, or database claim.
+
 1. `Continue SIH26016 from IMPLEMENTATION_PROGRESS.md. Complete Step 0 only: install dependencies and verify the build. Update the file.`
 2. `Continue SIH26016 from IMPLEMENTATION_PROGRESS.md. Complete Step 1 only. Update the file and verify the routes.`
 3. `Continue SIH26016 from IMPLEMENTATION_PROGRESS.md. Complete Step 2 only. Update the file and test the hero parcel rules.`

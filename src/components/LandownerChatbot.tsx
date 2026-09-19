@@ -47,7 +47,7 @@ function nextMessageId(): string {
 const STATUS_MEANING_ORDER: DashboardStatus[] = ['ready_to_advance', 'on_track', 'stuck', 'blocked', 'complete'];
 
 export function LandownerChatbot() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const { session } = useSession();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -58,14 +58,15 @@ export function LandownerChatbot() {
   const transcriptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (messages.length === 0) {
-      setMessages([
-        { id: nextMessageId(), sender: 'bot', text: t(uiText.chatbot.greeting) },
-        { id: nextMessageId(), sender: 'bot', text: t(uiText.chatbot.menuPrompt) },
-      ]);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Conversation strings are language-specific. Resetting the short demo
+    // helper when language changes avoids a mixed-language transcript.
+    setMessages([
+      { id: nextMessageId(), sender: 'bot', text: t(uiText.chatbot.greeting) },
+      { id: nextMessageId(), sender: 'bot', text: t(uiText.chatbot.menuPrompt) },
+    ]);
+    setMode('menu');
+    setInputValue('');
+  }, [language, t]);
 
   useEffect(() => {
     if (isOpen) {
@@ -258,7 +259,7 @@ export function LandownerChatbot() {
   return (
     <div className="chatbot-root">
       {isOpen && (
-        <section className="chatbot-panel" role="dialog" aria-label={t(uiText.chatbot.title)}>
+        <section className="chatbot-panel" key={language} role="dialog" aria-label={t(uiText.chatbot.title)}>
           <header className="chatbot-panel-header">
             <div>
               <p className="chatbot-panel-title">{t(uiText.chatbot.title)}</p>
@@ -350,7 +351,7 @@ export function LandownerChatbot() {
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
             />
-            <VoiceInputButton onResult={(transcript) => handleSubmit(transcript)} />
+            <VoiceInputButton onResult={(transcript) => handleSubmit(transcript)} speakLabel={t(uiText.chatbot.micButton)} />
             <Button type="submit" disabled={!inputValue.trim() || isLookingUp}>
               {t(uiText.chatbot.sendButton)}
             </Button>
@@ -358,15 +359,18 @@ export function LandownerChatbot() {
         </section>
       )}
 
-      <button
-        type="button"
-        className="chatbot-fab"
-        onClick={() => setIsOpen((open) => !open)}
-        aria-expanded={isOpen}
-        aria-label={isOpen ? t(uiText.chatbot.closeLabel) : t(uiText.chatbot.openLabel)}
-      >
-        <span aria-hidden="true">{isOpen ? '✕' : '💬'}</span>
-      </button>
+      <div className="chatbot-launcher">
+        {!isOpen && <span className="chatbot-help-bubble">{t(uiText.chatbot.needHelpLabel)}</span>}
+        <button
+          type="button"
+          className="chatbot-fab"
+          onClick={() => setIsOpen((open) => !open)}
+          aria-expanded={isOpen}
+          aria-label={isOpen ? t(uiText.chatbot.closeLabel) : t(uiText.chatbot.openLabel)}
+        >
+          <span aria-hidden="true">{isOpen ? '✕' : '💬'}</span>
+        </button>
+      </div>
     </div>
   );
 }

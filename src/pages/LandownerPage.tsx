@@ -16,8 +16,14 @@ function parseSpokenSurveyNumber(transcript: string): string {
   let text = transcript.trim().toLowerCase();
   text = text.replace(/\bslash\b/g, '/');
   text = text.replace(/\bdash\b/g, '/');
+  // Speech engines often return "124 slash 7" with spaces around the
+  // recognized slash. Deal with that before turning spaces into separators,
+  // then collapse any duplicate separators (the old order made 124///7).
+  text = text.replace(/\s*\/\s*/g, '/');
   text = text.replace(/[^a-z0-9/]+/g, ' ').trim();
   text = text.replace(/\s+/g, '/');
+  text = text.replace(/\/{2,}/g, '/');
+  text = text.replace(/^\/|\/$/g, '');
   return text;
 }
 
@@ -79,6 +85,7 @@ export function LandownerPage() {
       />
 
       <Card eyebrow={t(uiText.landownerSearch.cardEyebrow)} title={t(uiText.landownerSearch.cardTitle)}>
+        <p className="demo-survey-note"><strong>{t(uiText.landownerSearch.demoNumberLabel)}</strong> <button type="button" className="auth-link-btn" onClick={() => { setSurveyNumber('124/7'); void handleSearch('124/7'); }}>124/7</button></p>
         <form
           className="search-panel"
           onSubmit={(event) => {

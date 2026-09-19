@@ -7,7 +7,7 @@ import { Reveal, RevealLine } from '../components/landing/Reveal';
 import { StageWalk, type WalkStage } from '../components/landing/StageWalk';
 import { ACQUISITION_STAGES } from '../domain';
 import { useLanguage } from '../i18n/LanguageContext';
-import { uiText } from '../i18n/translations';
+import { stageLabels, stageShortLabels, uiText } from '../i18n/translations';
 import '../styles/landing.css';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -51,8 +51,8 @@ export function LandingPage() {
 
   const walkStages: WalkStage[] = ACQUISITION_STAGES.map((stage) => ({
     id: stage.id,
-    label: stage.label,
-    shortLabel: stage.shortLabel,
+    label: t(stageLabels[stage.id]),
+    shortLabel: t(stageShortLabels[stage.id]),
     body: t(uiText.landing[STEP_BODY_BY_STAGE_ID[stage.id]]),
   }));
 
@@ -109,6 +109,14 @@ export function LandingPage() {
                 </a>
               </div>
             </motion.div>
+            <div className="bs-india-visual" aria-label="India land-acquisition coordination visual">
+              <svg viewBox="0 0 420 500" role="img" aria-hidden="true">
+                <path d="M181 25l58 18 19 39 49 17-4 40 32 31-35 36-10 57-35 39-22 72-38 86-34-85-42-39-26-54-37-21 18-49-16-46 35-48 15-60 38-28z" />
+                <path className="bs-india-route" d="M153 107c34 45 51 94 40 148-9 46 9 96 42 151" />
+                <circle cx="153" cy="107" r="8" /><circle cx="193" cy="255" r="8" /><circle cx="235" cy="406" r="8" />
+              </svg>
+              <div className="bs-india-caption"><strong>One connected acquisition system</strong><span>From national oversight to parcel action</span></div>
+            </div>
           </div>
         </section>
 

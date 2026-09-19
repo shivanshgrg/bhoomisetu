@@ -15,6 +15,7 @@ import {
   TextField,
 } from '../components/ui';
 import { repository } from '../data';
+import { listWorkflowEvents, recordWorkflowEvent, subscribeWorkflowEvents, type WorkflowEvent } from '../data/workflowEvents';
 import {
   ACQUISITION_STAGES,
   DEMO_REFERENCE_DATE,
@@ -49,6 +50,7 @@ export function LandownerStatusPage() {
   const [parcel, setParcel] = useState<AcquisitionParcel | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | undefined>(undefined);
+  const [workflowEvents, setWorkflowEvents] = useState<WorkflowEvent[]>([]);
 
   const [objectionReason, setObjectionReason] = useState<ObjectionReason>('ownership');
   const [objectionDescription, setObjectionDescription] = useState('');
@@ -98,6 +100,13 @@ export function LandownerStatusPage() {
       isCancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    const refresh = () => setWorkflowEvents(listWorkflowEvents(id));
+    refresh();
+    return subscribeWorkflowEvents(refresh);
   }, [id]);
 
   const calculatedStatus = useMemo(() => (parcel ? getParcelCalculatedStatus(parcel) : undefined), [parcel]);
@@ -157,6 +166,7 @@ export function LandownerStatusPage() {
       setVoiceTranscript(undefined);
       setVoiceMatchedReason(undefined);
       setFiledObjectionId(objection.id);
+      recordWorkflowEvent({ parcelId: parcel.id, kind: 'objection_filed', message: 'Your objection was submitted for official review.' });
       setObjectionMessage(
         `${t(uiText.landownerStatus.objectionSubmittedPrefix)} ${objection.id} ${t(uiText.landownerStatus.objectionSubmittedSuffix)}`,
       );
@@ -298,6 +308,19 @@ export function LandownerStatusPage() {
           <span>{lapseKillShotText}</span>
           <span className="lapse-banner-note">{t(lapseRiskLabels[lapseStatus.risk])}</span>
         </div>
+      )}
+
+      {workflowEvents.length > 0 && (
+        <Card eyebrow={t(uiText.landownerStatus.updatesEyebrow)} title={t(uiText.landownerStatus.updatesTitle)}>
+          <ul className="workflow-event-list">
+            {workflowEvents.map((event) => (
+              <li key={event.id}>
+                <strong>{new Date(event.createdAt).toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-IN')}</strong>
+                <span>{event.message}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
       )}
 
       <section className="landowner-grid">

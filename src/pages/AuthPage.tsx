@@ -1,25 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  DEMO_CITIZEN_PROFILE,
-  DEMO_OFFICER_PROFILE,
+  DEMO_OFFICERS,
   requestOtp,
   verifyOfficerCredentials,
   verifyOtp,
 } from '../auth/authRepository';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { Button, Card } from '../components/ui';
-import { repository } from '../data';
-import { STATE_NAME_LABELS, type AcquisitionParcel, type AcquisitionProject, type AppRole, type StateName } from '../domain';
+import { type AppRole } from '../domain';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useSession } from '../i18n/SessionContext';
 import { uiText } from '../i18n/translations';
 import { useTheme } from '../theme/ThemeContext';
 
-// Step 62 Part A. Where each signed-in role lands — mirrors the destinations
-// the old LandingPage sign-in panel used, minus the roles that page's picker
-// exposed but this page's officer tab does not issue (national_admin has no
-// DEMO_OFFICERS entry — see src/auth/authRepository.ts).
 const ROLE_DESTINATION: Record<AppRole, string> = {
   national_admin: '/official/national',
   state_authority: '/official',
@@ -29,14 +23,6 @@ const ROLE_DESTINATION: Record<AppRole, string> = {
 };
 
 const OTP_RESEND_SECONDS = 60;
-
-function requiresStateScope(role: AppRole | undefined): boolean {
-  return role === 'state_authority' || role === 'district_officer' || role === 'field_officer';
-}
-
-function requiresDistrictScope(role: AppRole | undefined): boolean {
-  return role === 'district_officer' || role === 'field_officer';
-}
 
 function normalizePhoneDigits(value: string): string {
   return value.replace(/\D/g, '').slice(-10);
@@ -49,6 +35,7 @@ export function AuthPage() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState<'landowner' | 'officer'>('landowner');
+  const [showRoleChooser, setShowRoleChooser] = useState(true);
 
   // Landowner (citizen OTP) tab state.
   const [phone, setPhone] = useState('');
@@ -62,36 +49,12 @@ export function AuthPage() {
   // Officer (email/password) tab state.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [pendingOfficerRole, setPendingOfficerRole] = useState<AppRole | undefined>(undefined);
-  const [pendingOfficerName, setPendingOfficerName] = useState<string | undefined>(undefined);
-  const [pendingOfficerEmail, setPendingOfficerEmail] = useState<string | undefined>(undefined);
-  const [officerStateScope, setOfficerStateScope] = useState<StateName | undefined>(undefined);
-  const [officerDistrictScope, setOfficerDistrictScope] = useState<string | undefined>(undefined);
+  const [selectedAccessRole, setSelectedAccessRole] = useState<AppRole | undefined>(undefined);
+  const [selectedOfficerEmail, setSelectedOfficerEmail] = useState<string | undefined>(undefined);
   const [officerError, setOfficerError] = useState<string | undefined>(undefined);
   const [isSigningInOfficer, setIsSigningInOfficer] = useState(false);
 
-  const [projects, setProjects] = useState<AcquisitionProject[]>([]);
-  const [parcels, setParcels] = useState<AcquisitionParcel[]>([]);
-
   const resendTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
-
-  useEffect(() => {
-    let isCancelled = false;
-    Promise.all([repository.listProjects(), repository.listParcels()])
-      .then(([loadedProjects, loadedParcels]) => {
-        if (!isCancelled) {
-          setProjects(loadedProjects);
-          setParcels(loadedParcels);
-        }
-      })
-      .catch(() => {
-        // State/district options simply stay empty on failure — same
-        // graceful degradation the old LandingPage picker used.
-      });
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (resendSecondsLeft <= 0) {
@@ -111,56 +74,6 @@ export function AuthPage() {
       }
     };
   }, [resendSecondsLeft]);
-
-  const projectById = useMemo(() => new Map(projects.map((project) => [project.id, project])), [projects]);
-
-  const stateOptions = useMemo(() => {
-    const states = new Set<StateName>();
-    for (const project of projects) {
-      states.add(project.state);
-    }
-    return Array.from(states).sort((a, b) => STATE_NAME_LABELS[a].localeCompare(STATE_NAME_LABELS[b]));
-  }, [projects]);
-
-  const districtOptions = useMemo(() => {
-    if (!officerStateScope) {
-      return [];
-    }
-    const districts = new Set<string>();
-    for (const parcel of parcels) {
-      if (projectById.get(parcel.projectId)?.state === officerStateScope) {
-        districts.add(parcel.district);
-      }
-    }
-    return Array.from(districts).sort();
-  }, [parcels, projectById, officerStateScope]);
-
-  const needsState = requiresStateScope(pendingOfficerRole);
-  const needsDistrict = requiresDistrictScope(pendingOfficerRole);
-  const officerCanFinishSignIn =
-    pendingOfficerRole !== undefined &&
-    (!needsState || officerStateScope !== undefined) &&
-    (!needsDistrict || officerDistrictScope !== undefined);
-
-  function resetOfficerScopeStep() {
-    setPendingOfficerRole(undefined);
-    setPendingOfficerName(undefined);
-    setPendingOfficerEmail(undefined);
-    setOfficerStateScope(undefined);
-    setOfficerDistrictScope(undefined);
-  }
-
-  function handleDemoCitizenLogin() {
-    signIn(DEMO_CITIZEN_PROFILE, 'landowner');
-    navigate('/landowner');
-  }
-
-  function handleDemoOfficerLogin() {
-    // District Collector, pre-scoped in authRepository.ts to Maharashtra /
-    // Pune so this 1-click path never needs a scope picker.
-    signIn(DEMO_OFFICER_PROFILE, 'district_officer', 'maharashtra', 'Pune');
-    navigate('/official');
-  }
 
   function handleSendOtp(event: React.FormEvent) {
     event.preventDefault();
@@ -222,9 +135,16 @@ export function AuthPage() {
     setIsSigningInOfficer(true);
     verifyOfficerCredentials(email.trim(), password)
       .then(({ user, appRole }) => {
-        setPendingOfficerRole(appRole);
-        setPendingOfficerName(user.name);
-        setPendingOfficerEmail(user.email);
+        const selectedOfficer = DEMO_OFFICERS.find((officer) => officer.email === selectedOfficerEmail);
+        if (!selectedOfficer || selectedOfficer.email !== user.email) {
+          throw new Error('selected_officer_mismatch');
+        }
+        // Demo accounts have deliberately fixed jurisdiction, so the evaluator
+        // selects a role once and enters directly into the correctly scoped view.
+        const stateScope = appRole === 'national_admin' ? undefined : 'maharashtra';
+        const districtScope = appRole === 'district_officer' || appRole === 'field_officer' ? 'Pune' : undefined;
+        signIn(user, appRole, stateScope, districtScope);
+        navigate(ROLE_DESTINATION[appRole]);
       })
       .catch(() => {
         setOfficerError(t(uiText.auth.errorInvalidCredentials));
@@ -234,18 +154,16 @@ export function AuthPage() {
       });
   }
 
-  function handleFinishOfficerSignIn() {
-    if (!pendingOfficerRole || !pendingOfficerName || !officerCanFinishSignIn) {
-      setOfficerError(t(uiText.auth.errorMissingScope));
-      return;
-    }
-    signIn(
-      { type: 'officer', name: pendingOfficerName, email: pendingOfficerEmail },
-      pendingOfficerRole,
-      needsState ? officerStateScope : undefined,
-      needsDistrict ? officerDistrictScope : undefined,
-    );
-    navigate(ROLE_DESTINATION[pendingOfficerRole]);
+  function chooseAccessRole(role: AppRole) {
+    setShowRoleChooser(false);
+    setSelectedAccessRole(role);
+    const matches = DEMO_OFFICERS.filter((officer) => officer.appRole === role);
+    // Each administrative level has one evaluator account. Field Officer is
+    // deliberately one role, not a confusing list of stage-specific jobs.
+    setSelectedOfficerEmail(matches[0]?.email);
+    setEmail('');
+    setPassword('');
+    setOfficerError(undefined);
   }
 
   return (
@@ -276,23 +194,20 @@ export function AuthPage() {
 
       <main className="auth-main">
         <div className="auth-container">
-          <h1 className="auth-title">{t(uiText.auth.pageTitle)}</h1>
+          <h1 className="auth-title">{showRoleChooser ? t(uiText.auth.demoPersonaTitle) : t(uiText.auth.pageTitle)}</h1>
 
-          <Card>
-            <div className="auth-quick-login">
-              <p className="auth-quick-login-title">{t(uiText.auth.quickLoginTitle)}</p>
-              <div className="auth-quick-login-buttons">
-                <Button type="button" variant="secondary" onClick={handleDemoCitizenLogin}>
-                  {t(uiText.auth.demoCitizenButton)}
-                </Button>
-                <Button type="button" variant="secondary" onClick={handleDemoOfficerLogin}>
-                  {t(uiText.auth.demoOfficerButton)}
-                </Button>
+          {showRoleChooser ? (
+            <Card>
+              <p className="auth-quick-login-title">{t(uiText.auth.demoPersonaStep)}</p>
+              <p className="auth-role-intro">{t(uiText.auth.demoPersonaDescription)}</p>
+              <div className="auth-access-options auth-role-chooser">
+                {(['national_admin', 'state_authority', 'district_officer', 'field_officer'] as AppRole[]).map((role) => (
+                  <button key={role} type="button" className="auth-access-option" onClick={() => { setActiveTab('officer'); chooseAccessRole(role); }}><span aria-hidden="true">◆</span><strong>{t(uiText.auth.accessRoleLabels[role])}</strong></button>
+                ))}
+                <button type="button" className="auth-access-option auth-landowner-choice" onClick={() => { setActiveTab('landowner'); setShowRoleChooser(false); }}><span aria-hidden="true">⌂</span><strong>{t(uiText.auth.landownerTab)}</strong></button>
               </div>
-              <p className="auth-quick-login-note">{t(uiText.auth.quickLoginNote)}</p>
-            </div>
-          </Card>
-
+            </Card>
+          ) : <>
           <div className="auth-tabs" role="tablist" aria-label="Sign-in method">
             <button
               type="button"
@@ -385,7 +300,25 @@ export function AuthPage() {
 
             {activeTab === 'officer' && (
               <div className="auth-form">
-                {!pendingOfficerRole && (
+                <p className="auth-quick-login-title">{t(uiText.auth.chooseAccessLevelTitle)}</p>
+                <div className="auth-access-options" aria-label={t(uiText.auth.chooseAccessLevelTitle)}>
+                  {(['national_admin', 'state_authority', 'district_officer', 'field_officer'] as AppRole[]).map((role) => (
+                    <button
+                      className={selectedAccessRole === role ? 'auth-access-option active' : 'auth-access-option'}
+                      key={role}
+                      type="button"
+                      onClick={() => chooseAccessRole(role)}
+                    >
+                      <strong>{t(uiText.auth.accessRoleLabels[role])}</strong>
+                      <span>{t(uiText.auth.accessRoleDescriptions[role])}</span>
+                    </button>
+                  ))}
+                </div>
+                {selectedOfficerEmail && (
+                  (() => {
+                    const officer = DEMO_OFFICERS.find((entry) => entry.email === selectedOfficerEmail);
+                    return officer && <>
+                    <div className="auth-selected-authority"><strong>{t(uiText.auth.accessRoleLabels[selectedAccessRole!])}</strong><span>{officer.email}</span><small>{t(uiText.auth.demoPasswordLabel)} {officer.password}</small></div>
                   <form onSubmit={handleOfficerCredentials} className="auth-form">
                     <label className="field" htmlFor="auth-email">
                       <span>{t(uiText.auth.emailLabel)}</span>
@@ -412,71 +345,14 @@ export function AuthPage() {
                       {t(uiText.auth.signInButton)}
                     </Button>
                   </form>
-                )}
-
-                {pendingOfficerRole && (needsState || needsDistrict) && (
-                  <div className="auth-form">
-                    <p className="auth-otp-sent-note">{pendingOfficerName}</p>
-                    {needsState && (
-                      <label className="field" htmlFor="auth-state-scope">
-                        <span>{t(uiText.auth.stateLabel)}</span>
-                        <select
-                          id="auth-state-scope"
-                          value={officerStateScope ?? ''}
-                          onChange={(event) => {
-                            setOfficerStateScope((event.target.value || undefined) as StateName | undefined);
-                            setOfficerDistrictScope(undefined);
-                          }}
-                        >
-                          <option value="">{t(uiText.auth.stateSelectPlaceholder)}</option>
-                          {stateOptions.map((state) => (
-                            <option key={state} value={state}>
-                              {STATE_NAME_LABELS[state]}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                    {needsDistrict && officerStateScope && (
-                      <label className="field" htmlFor="auth-district-scope">
-                        <span>{t(uiText.auth.districtLabel)}</span>
-                        <select
-                          id="auth-district-scope"
-                          value={officerDistrictScope ?? ''}
-                          onChange={(event) => setOfficerDistrictScope(event.target.value || undefined)}
-                        >
-                          <option value="">{t(uiText.auth.districtSelectPlaceholder)}</option>
-                          {districtOptions.map((district) => (
-                            <option key={district} value={district}>
-                              {district}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                    {officerError && <p className="auth-error">{officerError}</p>}
-                    <div className="auth-form-actions">
-                      <Button type="button" disabled={!officerCanFinishSignIn} onClick={handleFinishOfficerSignIn}>
-                        {t(uiText.auth.signInButton)}
-                      </Button>
-                      <Button type="button" variant="ghost" onClick={resetOfficerScopeStep}>
-                        {t(uiText.auth.changeNumberButton)}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                {pendingOfficerRole && !needsState && !needsDistrict && (
-                  <div className="auth-form">
-                    <p className="auth-otp-sent-note">{pendingOfficerName}</p>
-                    <Button type="button" onClick={handleFinishOfficerSignIn}>
-                      {t(uiText.auth.signInButton)}
-                    </Button>
-                  </div>
+                    </>;
+                  })()
                 )}
               </div>
             )}
           </Card>
+          <Button type="button" variant="ghost" onClick={() => setShowRoleChooser(true)}>{t(uiText.auth.backToPersonas)}</Button>
+          </>}
         </div>
       </main>
     </div>

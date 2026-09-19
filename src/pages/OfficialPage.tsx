@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { ParcelMap } from '../components/ParcelMap';
 import { TimeTravelScrubber } from '../components/TimeTravelScrubber';
 import {
@@ -52,6 +52,9 @@ export function OfficialPage() {
   const { session } = useSession();
   const { t } = useLanguage();
   const role = session?.role;
+  const [searchParams] = useSearchParams();
+  const requestedStage = searchParams.get('stage');
+  const requestedProject = searchParams.get('project');
   const [parcels, setParcels] = useState<AcquisitionParcel[]>([]);
   const [projects, setProjects] = useState<AcquisitionProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -91,6 +94,18 @@ export function OfficialPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (requestedStage && ACQUISITION_STAGES.some((stage) => stage.id === requestedStage)) {
+      setStageFilter(requestedStage as StageId);
+    }
+  }, [requestedStage]);
+
+  useEffect(() => {
+    if (requestedProject) {
+      setProjectFilter(requestedProject);
+    }
+  }, [requestedProject]);
 
   const scopedParcels = useMemo(
     () => scopeParcelsToSession(parcels, projects, session),

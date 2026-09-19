@@ -54,6 +54,13 @@ type DemoOfficer = {
 // a single district in this prototype's role model.
 export const DEMO_OFFICERS: DemoOfficer[] = [
   {
+    email: 'national.admin@gov.in',
+    password: 'national@123',
+    name: 'National Administrator',
+    officialRole: 'district_collector',
+    appRole: 'national_admin',
+  },
+  {
     email: 'district.collector@gov.in',
     password: 'collector@123',
     name: OFFICIAL_ROLE_LABELS.district_collector,

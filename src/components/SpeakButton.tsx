@@ -8,7 +8,8 @@ type SpeakButtonProps = {
 };
 
 function pickVoice(voices: SpeechSynthesisVoice[], languageTag: string) {
-  const preferredPrefix = languageTag === 'hi' ? 'hi' : 'en';
+  const prefixes = { en: 'en', hi: 'hi', mr: 'mr', bn: 'bn', te: 'te', ta: 'ta', gu: 'gu', kn: 'kn', or: 'or', pa: 'pa' } as const;
+  const preferredPrefix = prefixes[languageTag as keyof typeof prefixes] ?? 'en';
   return (
     voices.find((voice) => voice.lang.toLowerCase().startsWith(preferredPrefix)) ??
     voices.find((voice) => voice.lang.toLowerCase().startsWith('en')) ??
@@ -20,10 +21,19 @@ export function SpeakButton({ text }: SpeakButtonProps) {
   const { language, t } = useLanguage();
   const [isSupported, setIsSupported] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   useEffect(() => {
     setIsSupported(typeof window !== 'undefined' && 'speechSynthesis' in window);
   }, []);
+
+  useEffect(() => {
+    if (!isSupported) return;
+    const loadVoices = () => setVoices(window.speechSynthesis.getVoices());
+    loadVoices();
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+  }, [isSupported]);
 
   useEffect(() => {
     if (!isSupported) {
@@ -47,8 +57,9 @@ export function SpeakButton({ text }: SpeakButtonProps) {
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language === 'hi' ? 'hi-IN' : 'en-IN';
-    const voice = pickVoice(window.speechSynthesis.getVoices(), language);
+    const locales = { en: 'en-IN', hi: 'hi-IN', mr: 'mr-IN', bn: 'bn-IN', te: 'te-IN', ta: 'ta-IN', gu: 'gu-IN', kn: 'kn-IN', or: 'or-IN', pa: 'pa-IN' } as const;
+    utterance.lang = locales[language];
+    const voice = pickVoice(voices, language);
     if (voice) {
       utterance.voice = voice;
     }

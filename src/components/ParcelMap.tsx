@@ -8,6 +8,7 @@ import {
   STAGE_BY_ID,
   computeConvexHull,
   getParcelCalculatedStatus,
+  getProjectCalculatedStatus,
   getParcelFootprintPolygon,
   type AcquisitionParcel,
   type AcquisitionProject,
@@ -49,6 +50,10 @@ type ColorMode = 'project' | 'status';
 type ParcelMapProps = {
   parcels: AcquisitionParcel[];
   projects?: AcquisitionProject[];
+  // National/state oversight intentionally stops at project status. District
+  // and field-officer views retain parcel geometry inside their existing
+  // scoped data boundary.
+  mode?: 'parcel' | 'project';
   // Step 64: when set to a scrubbed-to-the-past date, marker status is
   // computed against that date rather than today — the caller is expected to
   // already have swapped `parcels` for a time-travel snapshot.
@@ -245,7 +250,7 @@ function buildCadastralGridLines(parcels: AcquisitionParcel[]): [GeoPointTuple, 
 
 type GeoPointTuple = [number, number];
 
-export function ParcelMap({ parcels, projects = [], asOfDate = DEMO_REFERENCE_DATE }: ParcelMapProps) {
+export function ParcelMap({ parcels, projects = [], mode = 'parcel', asOfDate = DEMO_REFERENCE_DATE }: ParcelMapProps) {
   const [colorMode, setColorMode] = useState<ColorMode>('project');
   const [showCadastralOverlay, setShowCadastralOverlay] = useState(false);
 
@@ -295,7 +300,7 @@ export function ParcelMap({ parcels, projects = [], asOfDate = DEMO_REFERENCE_DA
 
   return (
     <div>
-      <div className="map-controls" role="group" aria-label="Marker color scheme">
+      {mode === 'parcel' && <div className="map-controls" role="group" aria-label="Marker color scheme">
         <button
           type="button"
           className={`map-color-toggle${colorMode === 'project' ? ' map-color-toggle-active' : ''}`}
@@ -320,7 +325,7 @@ export function ParcelMap({ parcels, projects = [], asOfDate = DEMO_REFERENCE_DA
         >
           Cadastral overlay
         </button>
-      </div>
+      </div>}
 
       <MapContainer center={center} zoom={parcels.length > 0 ? 9 : 6} className="parcel-map" scrollWheelZoom={false}>
         <TileLayer
@@ -338,35 +343,48 @@ export function ParcelMap({ parcels, projects = [], asOfDate = DEMO_REFERENCE_DA
             />
           ))}
 
-        {colorMode === 'project' &&
+        {(mode === 'project' || colorMode === 'project') &&
           projectBoundaries.map(({ projectId, hull }) => {
-            const color = projectColorById.get(projectId) ?? TONE_COLORS.neutral;
+            const project = projects.find((item) => item.id === projectId);
+            const projectParcels = parcels.filter((parcel) => parcel.projectId === projectId);
+            const projectStatus = project ? getProjectCalculatedStatus(project, projectParcels, asOfDate).status : undefined;
+            const color = mode === 'project'
+              ? projectStatus === 'delayed' ? TONE_COLORS.danger : projectStatus === 'at_risk' ? TONE_COLORS.warning : projectStatus === 'complete' ? TONE_COLORS.success : TONE_COLORS.info
+              : projectColorById.get(projectId) ?? TONE_COLORS.neutral;
 
             return (
               <Polygon
                 key={projectId}
                 positions={hull.map((point) => [point.lat, point.lng] as [number, number])}
-                pathOptions={{ color, fillColor: color, fillOpacity: 0.08, weight: 2 }}
-              />
+                pathOptions={{ color, fillColor: color, fillOpacity: mode === 'project' ? 0.22 : 0.08, weight: 2 }}
+              >
+                {mode === 'project' && project && (
+                  <Popup>
+                    <strong>{project.name}</strong><br />
+                    {projectStatus ?? 'on_track'} · {projectParcels.length} parcels<br />
+                    <Link to={`/official/project/${project.id}`}>Open project command center</Link>
+                  </Popup>
+                )}
+              </Polygon>
             );
           })}
 
-        <ParcelMarkers
+        {mode === 'parcel' && <ParcelMarkers
           parcels={parcels}
           colorMode={colorMode}
           projectColorById={projectColorById}
           projectNameById={projectNameById}
           asOfDate={asOfDate}
-        />
+        />}
       </MapContainer>
 
-      {colorMode === 'project' && projectIds.length > 0 && (
+      {(mode === 'project' || colorMode === 'project') && projectIds.length > 0 && (
         <ul className="map-legend" aria-label="Project color legend">
           {projectIds.map((projectId) => (
             <li key={projectId}>
               <span
                 className="map-legend-swatch"
-                style={{ background: projectColorById.get(projectId) }}
+                style={{ background: mode === 'project' ? TONE_COLORS.info : projectColorById.get(projectId) }}
               />
               {projectNameById.get(projectId) ?? projectId}
             </li>

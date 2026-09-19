@@ -25,8 +25,11 @@ type SidebarItem = {
 const SIDEBAR_ITEMS: SidebarItem[] = [
   { to: '/official', label: uiText.officialShell.overviewLabel, end: true },
   { to: '/official/action-center', label: uiText.officialShell.actionCenterLabel },
+  { to: '/official/document-review', label: uiText.officialShell.documentReviewLabel },
+  { to: '/official/demo', label: uiText.officialShell.demoModeLabel },
+  { to: '/official/compensation', label: uiText.officialShell.compensationLabel },
   { to: '/official/national', label: uiText.officialShell.projectsLabel },
-  { to: '/official/national', label: uiText.officialShell.rAndRLabel },
+  { to: '/official/r-and-r', label: uiText.officialShell.rAndRLabel },
   { to: '/official/reports', label: uiText.officialShell.reportsLabel },
   { to: '/official/bulk-import', label: uiText.officialShell.bulkImportLabel },
 ];
