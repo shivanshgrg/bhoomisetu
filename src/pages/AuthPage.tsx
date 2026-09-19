@@ -8,7 +8,7 @@ import {
 } from '../auth/authRepository';
 import { LanguagePicker } from '../components/LanguagePicker';
 import { Button, Card } from '../components/ui';
-import { type AppRole } from '../domain';
+import { demoParcels, demoProjects, STATE_NAMES, type AppRole, type StateName } from '../domain';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useSession } from '../i18n/SessionContext';
 import { uiText } from '../i18n/translations';
@@ -23,6 +23,29 @@ const ROLE_DESTINATION: Record<AppRole, string> = {
 };
 
 const OTP_RESEND_SECONDS = 60;
+
+// Keep the sign-in jurisdiction list aligned with the prototype's parcel
+// database. This also means a newly seeded district automatically becomes
+// available to district and field officers without another UI change.
+const PROJECT_STATE_BY_ID = new Map(demoProjects.map((project) => [project.id, project.state]));
+
+const DISTRICTS_BY_STATE = demoParcels.reduce<Record<StateName, string[]>>(
+  (districtsByState, parcel) => {
+    const state = PROJECT_STATE_BY_ID.get(parcel.projectId);
+    if (!state) {
+      return districtsByState;
+    }
+    const districts = districtsByState[state] ?? [];
+    if (!districts.includes(parcel.district)) {
+      districts.push(parcel.district);
+    }
+    districtsByState[state] = districts;
+    return districtsByState;
+  },
+  {} as Record<StateName, string[]>,
+);
+
+Object.values(DISTRICTS_BY_STATE).forEach((districts) => districts.sort());
 
 function normalizePhoneDigits(value: string): string {
   return value.replace(/\D/g, '').slice(-10);
@@ -51,6 +74,8 @@ export function AuthPage() {
   const [password, setPassword] = useState('');
   const [selectedAccessRole, setSelectedAccessRole] = useState<AppRole | undefined>(undefined);
   const [selectedOfficerEmail, setSelectedOfficerEmail] = useState<string | undefined>(undefined);
+  const [selectedStateScope, setSelectedStateScope] = useState<StateName | ''>('');
+  const [selectedDistrictScope, setSelectedDistrictScope] = useState('');
   const [officerError, setOfficerError] = useState<string | undefined>(undefined);
   const [isSigningInOfficer, setIsSigningInOfficer] = useState(false);
 
@@ -139,10 +164,13 @@ export function AuthPage() {
         if (!selectedOfficer || selectedOfficer.email !== user.email) {
           throw new Error('selected_officer_mismatch');
         }
-        // Demo accounts have deliberately fixed jurisdiction, so the evaluator
-        // selects a role once and enters directly into the correctly scoped view.
-        const stateScope = appRole === 'national_admin' ? undefined : 'maharashtra';
-        const districtScope = appRole === 'district_officer' || appRole === 'field_officer' ? 'Pune' : undefined;
+        const needsState = appRole === 'state_authority' || appRole === 'district_officer' || appRole === 'field_officer';
+        const needsDistrict = appRole === 'district_officer' || appRole === 'field_officer';
+        if ((needsState && !selectedStateScope) || (needsDistrict && !selectedDistrictScope)) {
+          throw new Error('missing_jurisdiction');
+        }
+        const stateScope = needsState && selectedStateScope ? selectedStateScope : undefined;
+        const districtScope = needsDistrict && selectedDistrictScope ? selectedDistrictScope : undefined;
         signIn(user, appRole, stateScope, districtScope);
         navigate(ROLE_DESTINATION[appRole]);
       })
@@ -163,6 +191,8 @@ export function AuthPage() {
     setSelectedOfficerEmail(matches[0]?.email);
     setEmail('');
     setPassword('');
+    setSelectedStateScope('');
+    setSelectedDistrictScope('');
     setOfficerError(undefined);
   }
 
@@ -320,6 +350,38 @@ export function AuthPage() {
                     return officer && <>
                     <div className="auth-selected-authority"><strong>{t(uiText.auth.accessRoleLabels[selectedAccessRole!])}</strong><span>{officer.email}</span><small>{t(uiText.auth.demoPasswordLabel)} {officer.password}</small></div>
                   <form onSubmit={handleOfficerCredentials} className="auth-form">
+                    {(['state_authority', 'district_officer', 'field_officer'] as AppRole[]).includes(selectedAccessRole!) && (
+                      <label className="field" htmlFor="auth-state-scope">
+                        <span>Select state</span>
+                        <select
+                          id="auth-state-scope"
+                          value={selectedStateScope}
+                          onChange={(event) => {
+                            setSelectedStateScope(event.target.value as StateName | '');
+                            setSelectedDistrictScope('');
+                          }}
+                        >
+                          <option value="">Choose a state</option>
+                          {STATE_NAMES.map((state) => <option key={state.id} value={state.id}>{state.label}</option>)}
+                        </select>
+                      </label>
+                    )}
+                    {(['district_officer', 'field_officer'] as AppRole[]).includes(selectedAccessRole!) && (
+                      <label className="field" htmlFor="auth-district-scope">
+                        <span>Select district</span>
+                        <select
+                          id="auth-district-scope"
+                          value={selectedDistrictScope}
+                          disabled={!selectedStateScope}
+                          onChange={(event) => setSelectedDistrictScope(event.target.value)}
+                        >
+                          <option value="">{selectedStateScope ? 'Choose a district' : 'Choose a state first'}</option>
+                          {(selectedStateScope ? DISTRICTS_BY_STATE[selectedStateScope] ?? [] : []).map((district) => (
+                            <option key={district} value={district}>{district}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                     <label className="field" htmlFor="auth-email">
                       <span>{t(uiText.auth.emailLabel)}</span>
                       <input
@@ -341,7 +403,14 @@ export function AuthPage() {
                       />
                     </label>
                     {officerError && <p className="auth-error">{officerError}</p>}
-                    <Button type="submit" disabled={isSigningInOfficer}>
+                    <Button
+                      type="submit"
+                      disabled={
+                        isSigningInOfficer ||
+                        ((selectedAccessRole === 'state_authority' || selectedAccessRole === 'district_officer' || selectedAccessRole === 'field_officer') && !selectedStateScope) ||
+                        ((selectedAccessRole === 'district_officer' || selectedAccessRole === 'field_officer') && !selectedDistrictScope)
+                      }
+                    >
                       {t(uiText.auth.signInButton)}
                     </Button>
                   </form>
